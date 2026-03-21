@@ -1,7 +1,11 @@
 /* eslint-disable */
 // @ts-nocheck
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
+const supabaseAdmin = createSupabaseAdmin(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 import Anthropic from "@anthropic-ai/sdk";
 import { runMatchingForProfile } from "@/lib/matching";
 import { createClient } from "@/lib/supabase/server";
@@ -161,7 +165,7 @@ async function processNewMatch(
   if (role === 'CANDIDATE') {
     const { data: candidate } = await supabase
       .from('candidate_profiles')
-      .select('*, profiles(id, clerk_user_id, email)')
+      .select('*, profiles(id, clerk_user_id, email, full_name)')
       .eq('profile_id', savedId)
       .single()
     
@@ -169,7 +173,7 @@ async function processNewMatch(
 
     const { data: jobs } = await supabase
       .from('job_listings')
-      .select('*, profiles(id, clerk_user_id, email)')
+      .select('*, profiles(id, clerk_user_id, email, full_name)')
       .eq('is_active', true)
     
     for (const job of jobs || []) {
@@ -212,24 +216,25 @@ async function processNewMatch(
       // Add to candidate chat
       await appendToChat(
         candidate.profiles.clerk_user_id,
-        '⚡ GAIA found a job match!\n\n' +
-        'Company: ' + job.company_name + '\n' +
-        'Role: ' + job.job_title + '\n' +
-        'Salary: ₹' + job.salary_min + 
-        '-' + job.salary_max + '/month\n' +
-        'Score: ' + score + '%\n\n' +
-        'Are you interested? Reply YES.'
+        `⚡ GAIA found a job match for you!\n\n` +
+        `Company: ${job.company_name || 'Confidential'}\n` +
+        `Role: ${job.job_title || 'Not specified'}\n` +
+        `Salary: ₹${job.salary_min || '0'}-${job.salary_max || '0'}/month\n` +
+        `Work Type: ${job.work_type || 'Not specified'}\n` +
+        `Match Score: ${score}%\n\n` +
+        `Are you interested? Reply YES to get full recruiter contact details.`
       )
       
       // Add to recruiter chat
       await appendToChat(
         job.profiles.clerk_user_id,
-        '⚡ GAIA found a candidate match!\n\n' +
-        'Role: ' + candidate.job_title + '\n' +
-        'Expected: ₹' + candidate.salary_min + 
-        '-' + candidate.salary_max + '/month\n' +
-        'Score: ' + score + '%\n\n' +
-        'Reply YES to get contact details.'
+        `⚡ GAIA found a matching candidate!\n\n` +
+        `Name: ${candidate.profiles?.full_name || 'Anonymous'}\n` +
+        `Role: ${candidate.job_title || 'Not specified'}\n` +
+        `Expected: ₹${candidate.salary_min || '0'}-${candidate.salary_max || '0'}/month\n` +
+        `Experience: ${candidate.experience_years || '0'} years\n` +
+        `Match Score: ${score}%\n\n` +
+        `Reply YES to get candidate contact details.`
       )
     }
   }
@@ -237,7 +242,7 @@ async function processNewMatch(
   if (role === 'RECRUITER') {
     const { data: job } = await supabase
       .from('job_listings')
-      .select('*, profiles(id, clerk_user_id, email)')
+      .select('*, profiles(id, clerk_user_id, email, full_name)')
       .eq('profile_id', savedId)
       .single()
     
@@ -245,7 +250,7 @@ async function processNewMatch(
 
     const { data: candidates } = await supabase
       .from('candidate_profiles')
-      .select('*, profiles(id, clerk_user_id, email)')
+      .select('*, profiles(id, clerk_user_id, email, full_name)')
     
     for (const candidate of candidates || []) {
       const score = calculateScore(candidate, job)
@@ -282,19 +287,24 @@ async function processNewMatch(
       
       await appendToChat(
         candidate.profiles.clerk_user_id,
-        '⚡ GAIA found a job match!\n\n' +
-        'Company: ' + job.company_name + '\n' +
-        'Role: ' + job.job_title + '\n' +
-        'Score: ' + score + '%\n\n' +
-        'Are you interested? Reply YES.'
+        `⚡ GAIA found a job match for you!\n\n` +
+        `Company: ${job.company_name || 'Confidential'}\n` +
+        `Role: ${job.job_title || 'Not specified'}\n` +
+        `Salary: ₹${job.salary_min || '0'}-${job.salary_max || '0'}/month\n` +
+        `Work Type: ${job.work_type || 'Not specified'}\n` +
+        `Match Score: ${score}%\n\n` +
+        `Are you interested? Reply YES to get full recruiter contact details.`
       )
       
       await appendToChat(
         job.profiles.clerk_user_id,
-        '⚡ New candidate matched!\n\n' +
-        'Role: ' + candidate.job_title + '\n' +
-        'Score: ' + score + '%\n\n' +
-        'Reply YES for contact details.'
+        `⚡ GAIA found a matching candidate!\n\n` +
+        `Name: ${candidate.profiles?.full_name || 'Anonymous'}\n` +
+        `Role: ${candidate.job_title || 'Not specified'}\n` +
+        `Expected: ₹${candidate.salary_min || '0'}-${candidate.salary_max || '0'}/month\n` +
+        `Experience: ${candidate.experience_years || '0'} years\n` +
+        `Match Score: ${score}%\n\n` +
+        `Reply YES to get candidate contact details.`
       )
     }
   }
@@ -312,9 +322,94 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const systemPrompt = role?.toUpperCase() === "CANDIDATE" ? CANDIDATE_PROMPT : RECRUITER_PROMPT;
+    const userRole = role?.toUpperCase();
+    const systemPrompt = userRole === "CANDIDATE" ? CANDIDATE_PROMPT : RECRUITER_PROMPT;
 
-    const { data: convo, error: convoError } = await supabase
+    // INTERCEPT: 'YES' / 'Interested' response
+    const normalizedMessage = message.trim().toLowerCase().replace(/[^\w\s]/gi, '');
+    const isYes = ["yes", "interested", "yes i am", "i am interested", "yes please"].includes(normalizedMessage);
+
+    if (isYes) {
+      console.log("Intercepting YES response for match acceptance");
+      
+      let matchToAccept = null;
+      if (userRole === "CANDIDATE") {
+        const { data: pendingMatches, error: candMatchErr } = await supabaseAdmin
+          .from('matches')
+          .select('id, job_id, candidate_id, score, job_listings!inner(job_title, company_name, profiles(id, full_name, email, whatsapp_number, linkedin_url, company_website))')
+          .eq('candidate_id', profileId)
+          .eq('status', 'PENDING')
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (candMatchErr) console.error("Cand Match Err:", candMatchErr);
+        if (pendingMatches && pendingMatches.length > 0) matchToAccept = pendingMatches[0];
+      } else {
+        const { data: myJobs } = await supabaseAdmin.from('job_listings').select('id').eq('profile_id', profileId);
+        const myJobIds = myJobs?.map(j => j.id) || [];
+        if (myJobIds.length > 0) {
+           const { data: pendingMatches, error: recMatchErr } = await supabaseAdmin
+             .from('matches')
+             .select('id, job_id, candidate_id, score, profiles!candidate_id(id, full_name, email, whatsapp_number, linkedin_url, portfolio_url)')
+             .in('job_id', myJobIds)
+             .eq('status', 'PENDING')
+             .order('created_at', { ascending: false })
+             .limit(1);
+           if (recMatchErr) console.error("Rec Match Err:", recMatchErr);
+           if (pendingMatches && pendingMatches.length > 0) matchToAccept = pendingMatches[0];
+        }
+      }
+
+      console.log("Found Match to Accept:", matchToAccept?.id);
+
+      if (matchToAccept) {
+        // Update match status to ACCEPTED
+        const { error: updateError } = await supabaseAdmin.from('matches').update({ status: 'ACCEPTED' }).eq('id', matchToAccept.id);
+        if (updateError) console.error("Status Update Error:", updateError);
+        
+        let replyContent = "";
+        if (userRole === "CANDIDATE") {
+          const recruiterUser = Array.isArray(matchToAccept.job_listings?.profiles) ? matchToAccept.job_listings.profiles[0] : matchToAccept.job_listings?.profiles;
+          replyContent = `✅ Match Accepted! Here are the recruiter's contact details:\n\n` +
+            `Name: ${recruiterUser?.full_name || 'Not provided'}\n` +
+            `Email: ${recruiterUser?.email || 'Not provided'}\n` +
+            `WhatsApp: ${recruiterUser?.whatsapp_number || 'Not provided'}\n` +
+            `LinkedIn: ${recruiterUser?.linkedin_url || 'Not provided'}\n` +
+            `Website: ${recruiterUser?.company_website || 'Not provided'}\n\n` +
+            `Good luck with your application!`;
+        } else {
+          const candUser = Array.isArray(matchToAccept.profiles) ? matchToAccept.profiles[0] : matchToAccept.profiles;
+          replyContent = `✅ Match Accepted! Here are the candidate's contact details:\n\n` +
+            `Name: ${candUser?.full_name || 'Not provided'}\n` +
+            `Email: ${candUser?.email || 'Not provided'}\n` +
+            `WhatsApp: ${candUser?.whatsapp_number || 'Not provided'}\n` +
+            `LinkedIn: ${candUser?.linkedin_url || 'Not provided'}\n` +
+            `Portfolio: ${candUser?.portfolio_url || 'Not provided'}\n\n` +
+            `Feel free to reach out to them directly to coordinate an interview.`;
+        }
+
+        // Add user message to convo, then our reply
+        const { data: convo } = await supabaseAdmin.from('conversations').select('messages').eq('id', conversationId).single();
+        const prevMsgs = Array.isArray(convo?.messages) ? convo.messages : [];
+        const newMsgs = [
+          ...prevMsgs, 
+          { role: 'user', content: message, timestamp: new Date().toISOString() },
+          { role: 'assistant', content: replyContent, timestamp: new Date().toISOString() }
+        ];
+        await supabaseAdmin.from('conversations').update({ messages: newMsgs }).eq('id', conversationId);
+
+        // Stream back the reply immediately
+        const encoder = new TextEncoder();
+        const readableStream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode(replyContent));
+            controller.close();
+          }
+        });
+        return new Response(readableStream, { headers: { "Content-Type": "text/plain; charset=utf-8" }});
+      }
+    }
+
+    const { data: convo, error: convoError } = await supabaseAdmin
       .from("conversations")
       .select("messages")
       .eq("id", conversationId)
@@ -325,9 +420,9 @@ export async function POST(req: NextRequest) {
     }
 
     const previousMessages = convo?.messages || [];
-    const updatedMessages = [...previousMessages, { role: "user", content: message }];
+    const updatedMessages = [...previousMessages, { role: "user", content: message, timestamp: new Date().toISOString() }];
 
-    await supabase
+    await supabaseAdmin
       .from("conversations")
       .update({ messages: updatedMessages })
       .eq("id", conversationId);
@@ -369,11 +464,11 @@ export async function POST(req: NextRequest) {
           console.log("PROFILE MATCH FOUND:", !!profileMatch);
           console.log("JOB MATCH FOUND:", !!jobMatch);
 
-          if (profileMatch && role === "CANDIDATE") {
+          if (profileMatch && userRole === "CANDIDATE") {
             try {
               const parsed = JSON.parse(profileMatch[1].trim());
               console.log("SAVING CANDIDATE PROFILE:", parsed);
-              await supabase.from("profiles").update({
+              await supabaseAdmin.from("profiles").update({
                 full_name: parsed.full_name,
                 email: parsed.email,
                 whatsapp_number: parsed.whatsapp_number,
@@ -381,9 +476,9 @@ export async function POST(req: NextRequest) {
                 portfolio_url: parsed.portfolio_url
               }).eq("id", profileId);
 
-              const { data: existingCand } = await supabase.from("candidate_profiles").select("id").eq("profile_id", profileId).maybeSingle();
+              const { data: existingCand } = await supabaseAdmin.from("candidate_profiles").select("id").eq("profile_id", profileId).maybeSingle();
               if (existingCand) {
-                await supabase.from("candidate_profiles").update({
+                await supabaseAdmin.from("candidate_profiles").update({
                   job_title: parsed.job_title,
                   skills: parsed.skills,
                   experience_years: parsed.experience_years,
@@ -394,7 +489,7 @@ export async function POST(req: NextRequest) {
                   availability: parsed.availability
                 }).eq("profile_id", profileId);
               } else {
-                await supabase.from("candidate_profiles").insert({
+                await supabaseAdmin.from("candidate_profiles").insert({
                   profile_id: profileId,
                   job_title: parsed.job_title,
                   skills: parsed.skills,
@@ -416,11 +511,11 @@ export async function POST(req: NextRequest) {
             } catch (e) {
               console.error("Failed to parse PROFILE_DATA JSON", e);
             }
-          } else if (jobMatch && role === "RECRUITER") {
+          } else if (jobMatch && userRole === "RECRUITER") {
             try {
               const parsed = JSON.parse(jobMatch[1].trim());
               console.log("SAVING JOB LISTING:", parsed);
-              await supabase.from("profiles").update({
+              await supabaseAdmin.from("profiles").update({
                 full_name: parsed.full_name,
                 email: parsed.email,
                 whatsapp_number: parsed.whatsapp_number,
@@ -428,7 +523,7 @@ export async function POST(req: NextRequest) {
                 company_website: parsed.company_website
               }).eq("id", profileId);
 
-              await supabase.from("job_listings").insert({
+              await supabaseAdmin.from("job_listings").insert({
                 profile_id: profileId,
                 job_title: parsed.job_title,
                 company_name: parsed.company_name,
@@ -452,8 +547,8 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          const finalMessages = [...updatedMessages, { role: "assistant", content: finalExtractedText }];
-          await supabase
+          const finalMessages = [...updatedMessages, { role: "assistant", content: finalExtractedText, timestamp: new Date().toISOString() }];
+          await supabaseAdmin
             .from("conversations")
             .update({ messages: finalMessages })
             .eq("id", conversationId);
@@ -475,4 +570,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to process message" }, { status: 500 });
   }
 }
-
