@@ -15,6 +15,9 @@ interface Message {
   matchId?: string;
   isStreaming?: boolean;
   matchInfo?: any;
+  fileName?: string;
+  fileType?: string;
+  fileData?: string;
 }
 
 export default function ChatPage({ params }: { params: { id: string } }) {
@@ -28,10 +31,14 @@ export default function ChatPage({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState<"CANDIDATE" | "RECRUITER" | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // REFS
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const attachmentRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLInputElement>(null);
 
   const activeConvo = params.id;
 
@@ -141,14 +148,57 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      if (file.type.startsWith("image/")) {
+        setPreviewUrl(URL.createObjectURL(file));
+      } else {
+        setPreviewUrl(null);
+      }
+    }
+  };
+
+  const getBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!input.trim() || !activeConvo || !profileId || !role) return;
+    if ((!input.trim() && !selectedFile) || !activeConvo || !profileId || !role) return;
 
     const userMessage = input.trim();
     setInput("");
+    
+    let fileData = null;
+    let fileName = null;
+    let fileType = null;
+    
+    if (selectedFile) {
+      fileName = selectedFile.name;
+      fileType = selectedFile.type;
+      fileData = await getBase64(selectedFile);
+    }
 
-    const tempMsgs = [...messages, { role: "user" as const, content: userMessage }];
+    const currentFile = selectedFile;
+    const currentPreviewUrl = previewUrl;
+
+    setSelectedFile(null);
+    setPreviewUrl(null);
+
+    const tempMsgs = [...messages, { 
+      role: "user" as const, 
+      content: userMessage,
+      fileName,
+      fileType,
+      fileData: currentPreviewUrl || undefined
+    }];
     setMessages(tempMsgs);
     setLoading(true);
 
@@ -160,7 +210,10 @@ export default function ChatPage({ params }: { params: { id: string } }) {
           message: userMessage,
           conversationId: activeConvo,
           profileId,
-          role
+          role,
+          fileData,
+          fileName,
+          fileType
         }),
       });
 
@@ -382,6 +435,22 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                   color: "#1F1F1F",
                   whiteSpace: "pre-wrap" as const
                 }}>
+                  {msg.fileName && (
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 12px",
+                      background: msg.role === "user" ? "#FFE5DC" : "#F7F6F3",
+                      borderRadius: "8px",
+                      marginBottom: msg.content ? "8px" : "0",
+                      fontSize: "13px",
+                      fontWeight: "500"
+                    }}>
+                      <span>{msg.fileType?.startsWith("image/") ? "🖼️" : "📎"}</span>
+                      {msg.fileName}
+                    </div>
+                  )}
                   {msg.content}
                   {msg.hasSuccess && (
                     <div style={{
@@ -451,17 +520,48 @@ export default function ChatPage({ params }: { params: { id: string } }) {
           alignItems: "center",
           zIndex: 100
         }}>
-          <form
-            onSubmit={handleSend}
-            style={{
-              display: "flex",
-              gap: "12px",
-              alignItems: "center",
-              flex: 1,
-              maxWidth: "800px",
-              margin: "0 auto"
-            }}
-          >
+          
+          <div style={{ flex: 1, position: "relative", maxWidth: "800px", margin: "0 auto" }}>
+            {selectedFile && (
+              <div style={{
+                position: "absolute",
+                bottom: "calc(100% + 12px)",
+                left: 0,
+                background: "#FFFFFF",
+                border: "1px solid #EAEAEA",
+                borderRadius: "12px",
+                padding: "8px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
+              }}>
+                {previewUrl ? (
+                  <img src={previewUrl} alt="Preview" style={{ width: "32px", height: "32px", borderRadius: "4px", objectFit: "cover" }} />
+                ) : (
+                  <div style={{ fontSize: "20px" }}>📎</div>
+                )}
+                <div style={{ fontSize: "14px", fontWeight: "500", color: "#1F1F1F", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {selectedFile.name}
+                </div>
+                <button 
+                  onClick={() => { setSelectedFile(null); setPreviewUrl(null); }}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: "#999", padding: "4px" }}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            
+            <form
+              onSubmit={handleSend}
+              style={{
+                display: "flex",
+                gap: "12px",
+                alignItems: "center",
+                width: "100%"
+              }}
+            >
             <input
               ref={inputRef}
               autoFocus
@@ -486,16 +586,82 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                 color: "#1F1F1F"
               }}
             />
+            
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input 
+                id="doc-upload-input"
+                type="file" 
+                ref={attachmentRef} 
+                style={{ display: "none" }} 
+                accept=".pdf,.doc,.docx" 
+                onChange={handleFileSelect} 
+              />
+              <input 
+                id="image-upload-input"
+                type="file" 
+                ref={imageRef} 
+                style={{ display: "none" }} 
+                accept="image/jpeg,image/png,image/webp" 
+                onChange={handleFileSelect} 
+              />
+              
+              <button
+                type="button"
+                onClick={() => attachmentRef.current?.click()}
+                disabled={loading}
+                title="Attach Document (PDF/DOC)"
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  background: "transparent",
+                  border: "1px solid #EAEAEA",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "16px",
+                  color: "#666",
+                  transition: "background 200ms"
+                }}
+              >
+                📎
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => imageRef.current?.click()}
+                disabled={loading}
+                title="Attach Image (JPG/PNG)"
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  background: "transparent",
+                  border: "1px solid #EAEAEA",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "16px",
+                  color: "#666",
+                  transition: "background 200ms"
+                }}
+              >
+                🖼️
+              </button>
+            </div>
+
             <button
               type="submit"
-              disabled={!input.trim() || loading}
+              disabled={(!input.trim() && !selectedFile) || loading}
               style={{
                 width: "44px",
                 height: "44px",
                 borderRadius: "50%",
-                background: input.trim() ? "#FF6B3D" : "#E5E5E5",
+                background: (input.trim() || selectedFile) ? "#FF6B3D" : "#E5E5E5",
                 border: "none",
-                cursor: input.trim() ? "pointer" : "default",
+                cursor: (input.trim() || selectedFile) ? "pointer" : "default",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -507,6 +673,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
               →
             </button>
           </form>
+          </div>
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { runMatchingForProfile } from "@/lib/matching";
 import { createClient } from "@/lib/supabase/server";
 import { sendMatchEmail } from "@/lib/email";
+import pdf from "pdf-parse";
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -380,9 +381,10 @@ export async function processNewMatch(
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, conversationId, profileId, role } = await req.json();
+    const { message, conversationId, profileId, role, fileData, fileName, fileType } = await req.json();
     console.log("1. MESSAGE RECEIVED:", message);
     console.log("2. ROLE:", role);
+    console.log("FILE:", fileName, fileType);
 
     if (!message || !conversationId || !profileId || !role) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -486,22 +488,80 @@ export async function POST(req: NextRequest) {
     }
 
     const previousMessages = convo?.messages || [];
-    const updatedMessages = [...previousMessages, { role: "user", content: message, timestamp: new Date().toISOString() }];
+    
+    let dbContentText = message;
+    if (fileName) {
+      dbContentText = `[Attached File: ${fileName}]\n\n${message}`;
+    }
+
+    const updatedMessages = [...previousMessages, { role: "user", content: dbContentText, timestamp: new Date().toISOString() }];
 
     await supabaseAdmin
       .from("conversations")
       .update({ messages: updatedMessages })
       .eq("id", conversationId);
 
+    // Prepare Anthropic Messages
+    let extractedPdfText = null;
+    if (fileData && fileType === "application/pdf") {
+      try {
+        const base64Data = fileData.split(",")[1];
+        const buffer = Buffer.from(base64Data, "base64");
+        const pdfData = await pdf(buffer);
+        extractedPdfText = pdfData.text;
+        console.log("PDF Extracted text:", extractedPdfText.substring(0, 100));
+      } catch (e) {
+        console.error("PDF Parsing Error:", e);
+      }
+    }
+
+    const extractionPrompt = "This is a [resume/job description] file. Extract all information you can find: name, skills, experience, salary, work type, contact details, etc. Then continue the conversation to collect any missing information one question at a time.";
+
+    const anthropicMessages = updatedMessages.map((msg: any, i: number) => {
+      const isLast = i === updatedMessages.length - 1;
+      
+      if (isLast && fileData) {
+        if (fileType?.startsWith("image/")) {
+          const base64Data = fileData.split(",")[1];
+          let mediaType = fileType.split(";")[0] || "image/jpeg";
+          // Anthropic strict image types: image/jpeg, image/png, image/gif, image/webp
+          if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(mediaType)) {
+             mediaType = "image/jpeg";
+          }
+          
+          return {
+            role: "user",
+            content: [
+              {
+                type: "image",
+                source: { type: "base64", media_type: mediaType as any, data: base64Data }
+              },
+              {
+                type: "text",
+                text: `${extractionPrompt}\n\nUser Message: ${message}`
+              }
+            ]
+          };
+        } else if (fileType === "application/pdf" && extractedPdfText) {
+          return {
+            role: "user",
+            content: `I have uploaded a document (${fileName}). Here is its extracted text:\n\n${extractedPdfText}\n\n${extractionPrompt}\n\nUser Message: ${message}`
+          };
+        }
+      }
+
+      return {
+        role: msg.role === "assistant" ? "assistant" : "user",
+        content: msg.content,
+      };
+    });
+
     const stream = client.messages
       .stream({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-3-5-sonnet-latest",
         max_tokens: 1024,
         system: systemPrompt,
-        messages: updatedMessages.map((msg: { role: string; content: string }) => ({
-          role: msg.role === "assistant" ? "assistant" : "user",
-          content: msg.content,
-        })) as Anthropic.MessageParam[],
+        messages: anthropicMessages as Anthropic.MessageParam[],
       });
 
     const encoder = new TextEncoder();
