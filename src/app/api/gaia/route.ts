@@ -9,6 +9,7 @@ const supabaseAdmin = createSupabaseAdmin(
 import Anthropic from "@anthropic-ai/sdk";
 import { runMatchingForProfile } from "@/lib/matching";
 import { createClient } from "@/lib/supabase/server";
+import { sendMatchEmail } from "@/lib/email";
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -154,7 +155,7 @@ function calculateScore(candidate: any, job: any) {
   return Math.min(score, 100)
 }
 
-async function processNewMatch(
+export async function processNewMatch(
   savedId: string, 
   role: 'CANDIDATE' | 'RECRUITER'
 ) {
@@ -171,7 +172,7 @@ async function processNewMatch(
     
     if (!candidate) return { matches: [], notifications: 0 };
 
-    const { data: jobs } = await supabase
+    const { data: jobs } = await supabaseAdmin
       .from('job_listings')
       .select('*, profiles(id, clerk_user_id, email, full_name)')
       .eq('is_active', true)
@@ -181,7 +182,7 @@ async function processNewMatch(
       if (score < 60) continue
       
       // Save match
-      const { data: match } = await supabase.from('matches').insert({
+      const { data: match } = await supabaseAdmin.from('matches').insert({
         candidate_id: savedId,
         job_id: job.id,
         score,
@@ -191,7 +192,7 @@ async function processNewMatch(
       if (match) matchesFound.push(match)
       
       // Notify candidate
-      await supabase.from('notifications').insert({
+      await supabaseAdmin.from('notifications').insert({
         user_id: candidate.profiles.id,
         title: '⚡ New Job Match Found!',
         message: job.company_name + ' is hiring ' + 
@@ -202,7 +203,7 @@ async function processNewMatch(
       notificationsCreated++
       
       // Notify recruiter
-      await supabase.from('notifications').insert({
+      await supabaseAdmin.from('notifications').insert({
         user_id: job.profiles.id,
         title: '⚡ New Candidate Match!',
         message: candidate.job_title + 
@@ -236,6 +237,38 @@ async function processNewMatch(
         `Match Score: ${score}%\n\n` +
         `Reply YES to get candidate contact details.`
       )
+
+      await sendMatchEmail(
+        candidate.profiles.email,
+        "⚡ GRAVITAS: New Job Match - " + job.job_title,
+        "<h2>New Job Match Found!</h2>" +
+        "<p><strong>Company:</strong> " + (job.company_name || "Confidential") + "</p>" +
+        "<p><strong>Role:</strong> " + job.job_title + "</p>" +
+        "<p><strong>Salary:</strong> ₹" + (job.salary_min || 0) + 
+        "-" + (job.salary_max || 0) + "/month</p>" +
+        "<p><strong>Match Score:</strong> " + score + "%</p>" +
+        "<p>Login to GRAVITAS to accept this match.</p>" +
+        "<a href='https://gravitas-dusky.vercel.app/chat' " +
+        "style='background:#FF6B3D;color:white;padding:12px 24px;" +
+        "border-radius:8px;text-decoration:none;display:inline-block;" +
+        "margin-top:16px'>View Match →</a>"
+      )
+
+      await sendMatchEmail(
+        job.profiles.email,
+        "⚡ GRAVITAS: New Candidate - " + (candidate.profiles?.full_name || "Anonymous"),
+        "<h2>New Candidate Match!</h2>" +
+        "<p><strong>Name:</strong> " + (candidate.profiles?.full_name || "Anonymous") + "</p>" +
+        "<p><strong>Role:</strong> " + candidate.job_title + "</p>" +
+        "<p><strong>Expected:</strong> ₹" + (candidate.salary_min || 0) + 
+        "-" + (candidate.salary_max || 0) + "/month</p>" +
+        "<p><strong>Match Score:</strong> " + score + "%</p>" +
+        "<p>Login to GRAVITAS to connect with this candidate.</p>" +
+        "<a href='https://gravitas-dusky.vercel.app/chat' " +
+        "style='background:#FF6B3D;color:white;padding:12px 24px;" +
+        "border-radius:8px;text-decoration:none;display:inline-block;" +
+        "margin-top:16px'>View Match →</a>"
+      )
     }
   }
   
@@ -254,6 +287,7 @@ async function processNewMatch(
     
     for (const candidate of candidates || []) {
       const score = calculateScore(candidate, job)
+      console.log(`[TEST MATCH] Candidate: ${candidate.job_title} | Job: ${job.job_title} | Score: ${score}`);
       if (score < 60) continue
       
       const { data: match } = await supabase.from('matches').insert({
@@ -305,6 +339,38 @@ async function processNewMatch(
         `Experience: ${candidate.experience_years || '0'} years\n` +
         `Match Score: ${score}%\n\n` +
         `Reply YES to get candidate contact details.`
+      )
+
+      await sendMatchEmail(
+        candidate.profiles.email,
+        "⚡ GRAVITAS: New Job Match - " + job.job_title,
+        "<h2>New Job Match Found!</h2>" +
+        "<p><strong>Company:</strong> " + (job.company_name || "Confidential") + "</p>" +
+        "<p><strong>Role:</strong> " + job.job_title + "</p>" +
+        "<p><strong>Salary:</strong> ₹" + (job.salary_min || 0) + 
+        "-" + (job.salary_max || 0) + "/month</p>" +
+        "<p><strong>Match Score:</strong> " + score + "%</p>" +
+        "<p>Login to GRAVITAS to accept this match.</p>" +
+        "<a href='https://gravitas-dusky.vercel.app/chat' " +
+        "style='background:#FF6B3D;color:white;padding:12px 24px;" +
+        "border-radius:8px;text-decoration:none;display:inline-block;" +
+        "margin-top:16px'>View Match →</a>"
+      )
+
+      await sendMatchEmail(
+        job.profiles.email,
+        "⚡ GRAVITAS: New Candidate - " + (candidate.profiles?.full_name || "Anonymous"),
+        "<h2>New Candidate Match!</h2>" +
+        "<p><strong>Name:</strong> " + (candidate.profiles?.full_name || "Anonymous") + "</p>" +
+        "<p><strong>Role:</strong> " + candidate.job_title + "</p>" +
+        "<p><strong>Expected:</strong> ₹" + (candidate.salary_min || 0) + 
+        "-" + (candidate.salary_max || 0) + "/month</p>" +
+        "<p><strong>Match Score:</strong> " + score + "%</p>" +
+        "<p>Login to GRAVITAS to connect with this candidate.</p>" +
+        "<a href='https://gravitas-dusky.vercel.app/chat' " +
+        "style='background:#FF6B3D;color:white;padding:12px 24px;" +
+        "border-radius:8px;text-decoration:none;display:inline-block;" +
+        "margin-top:16px'>View Match →</a>"
       )
     }
   }
