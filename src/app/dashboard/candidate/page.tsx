@@ -27,10 +27,11 @@ export default async function CandidateDashboard() {
     .eq("profile_id", profile.id)
     .maybeSingle();
 
-  const { data: matches } = await supabase
+  // "Matches Found" = COUNT from matches WHERE candidate_id IN (SELECT id FROM candidate_profiles WHERE profile_id = current user profile id)
+  const { data: matches, count: matchesCount } = await supabase
     .from("matches")
-    .select("*, job_listings(*, profiles(company_website, full_name, name))")
-    .eq("candidate_id", profile.id)
+    .select("*, job_listings(*, profiles(company_website, full_name, name))", { count: 'exact' })
+    .eq("candidate_id", profile.id) // This is equivalent to filtering by candidate_profiles.id if we use the right column, but candidate_id is the profile UUID in matches.
     .order("created_at", { ascending: false });
 
   return (
@@ -49,7 +50,7 @@ export default async function CandidateDashboard() {
         </Card>
         <Card className="fade-slide-up" style={{ animationDelay: '100ms' }}>
            <h3 className="text-subtle text-small font-medium uppercase tracking-wider mb-2">Matches Found</h3>
-           <div className="text-h2 font-semibold text-foreground">{matches?.length || 0}</div>
+           <div className="text-h2 font-semibold text-foreground">{matchesCount || 0}</div>
         </Card>
         <Card className="fade-slide-up" style={{ animationDelay: '150ms' }}>
            <h3 className="text-subtle text-small font-medium uppercase tracking-wider mb-2">Visibility</h3>

@@ -40,26 +40,30 @@ export default function RecruiterDashboard() {
       }
 
       setProfile(profileData);
+      
+      setLoading(true);
 
-      const { data: jobsData } = await supabase
+      // 1. Active Roles = COUNT from job_listings WHERE profile_id = current user profile id
+      const { data: jobsData, count: jobsCount } = await supabase
         .from("job_listings")
-        .select("*")
+        .select("*", { count: 'exact' })
         .eq("profile_id", profileData.id)
         .order("created_at", { ascending: false });
 
       setJobs(jobsData || []);
       
+      // 2. Total Matches = COUNT from matches WHERE job_id IN (SELECT id FROM job_listings WHERE profile_id = current user profile id)
       const jobIds = jobsData?.map(j => j.id) || [];
-      let count = 0;
+      let matchCount = 0;
       if (jobIds.length > 0) {
-        const { count: matchCount } = await supabase
+        const { count } = await supabase
           .from("matches")
           .select("id", { count: 'exact', head: true })
           .in("job_id", jobIds);
-        count = matchCount || 0;
+        matchCount = count || 0;
       }
         
-      setMatchesCount(count);
+      setMatchesCount(matchCount);
       setLoading(false);
     };
 
@@ -76,7 +80,6 @@ export default function RecruiterDashboard() {
     );
   }
 
-  const activeJobs = jobs.filter(j => j.is_active).length;
 
   return (
     <div className="fade-in">
@@ -91,7 +94,7 @@ export default function RecruiterDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <Card className="fade-slide-up" style={{ animationDelay: '50ms' }}>
            <h3 className="text-subtle text-small font-medium uppercase tracking-wider mb-2">Active Roles</h3>
-           <div className="text-h2 font-semibold text-foreground">{activeJobs}</div>
+           <div className="text-h2 font-semibold text-foreground">{jobs.length}</div>
         </Card>
         <Card className="fade-slide-up" style={{ animationDelay: '100ms' }}>
            <h3 className="text-subtle text-small font-medium uppercase tracking-wider mb-2">Total Matches</h3>
