@@ -155,6 +155,8 @@ async function processNewMatch(
   role: 'CANDIDATE' | 'RECRUITER'
 ) {
   const supabase = createClient()
+  let matchesFound = []
+  let notificationsCreated = 0
   
   if (role === 'CANDIDATE') {
     const { data: candidate } = await supabase
@@ -163,7 +165,7 @@ async function processNewMatch(
       .eq('profile_id', savedId)
       .single()
     
-    if (!candidate) return;
+    if (!candidate) return { matches: [], notifications: 0 };
 
     const { data: jobs } = await supabase
       .from('job_listings')
@@ -174,13 +176,15 @@ async function processNewMatch(
       const score = calculateScore(candidate, job)
       if (score < 60) continue
       
-      // Save match - using verified column names candidate_id, job_id
-      await supabase.from('matches').insert({
+      // Save match
+      const { data: match } = await supabase.from('matches').insert({
         candidate_id: savedId,
         job_id: job.id,
         score,
         status: 'PENDING'
-      })
+      }).select().single()
+      
+      if (match) matchesFound.push(match)
       
       // Notify candidate
       await supabase.from('notifications').insert({
@@ -191,6 +195,7 @@ async function processNewMatch(
         type: 'MATCH',
         is_read: false
       })
+      notificationsCreated++
       
       // Notify recruiter
       await supabase.from('notifications').insert({
@@ -202,6 +207,7 @@ async function processNewMatch(
         type: 'MATCH',
         is_read: false
       })
+      notificationsCreated++
       
       // Add to candidate chat
       await appendToChat(
@@ -235,7 +241,7 @@ async function processNewMatch(
       .eq('profile_id', savedId)
       .single()
     
-    if (!job) return;
+    if (!job) return { matches: [], notifications: 0 };
 
     const { data: candidates } = await supabase
       .from('candidate_profiles')
@@ -245,12 +251,14 @@ async function processNewMatch(
       const score = calculateScore(candidate, job)
       if (score < 60) continue
       
-      await supabase.from('matches').insert({
+      const { data: match } = await supabase.from('matches').insert({
         candidate_id: candidate.profile_id,
         job_id: job.id,
         score,
         status: 'PENDING'
-      })
+      }).select().single()
+
+      if (match) matchesFound.push(match)
       
       await supabase.from('notifications').insert({
         user_id: candidate.profiles.id,
@@ -260,6 +268,7 @@ async function processNewMatch(
         type: 'MATCH',
         is_read: false
       })
+      notificationsCreated++
       
       await supabase.from('notifications').insert({
         user_id: job.profiles.id,
@@ -269,6 +278,7 @@ async function processNewMatch(
         type: 'MATCH',
         is_read: false
       })
+      notificationsCreated++
       
       await appendToChat(
         candidate.profiles.clerk_user_id,
@@ -288,6 +298,8 @@ async function processNewMatch(
       )
     }
   }
+
+  return { matches: matchesFound, notifications: notificationsCreated }
 }
 
 export async function POST(req: NextRequest) {
@@ -295,6 +307,7 @@ export async function POST(req: NextRequest) {
     const { message, conversationId, profileId, role } = await req.json();
     console.log("1. MESSAGE RECEIVED:", message);
     console.log("2. ROLE:", role);
+
     if (!message || !conversationId || !profileId || !role) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
@@ -395,8 +408,10 @@ export async function POST(req: NextRequest) {
               }
 
               // TRIGGER MATCHING
-              console.log("MATCHING TRIGGERED for:", profileId, "CANDIDATE");
-              await processNewMatch(profileId, "CANDIDATE");
+              console.log("PROFILE SAVED - running matching...");
+              const { matches, notifications } = await processNewMatch(profileId, "CANDIDATE");
+              console.log("MATCHES FOUND:", matches.length);
+              console.log("NOTIFICATIONS CREATED:", notifications);
 
             } catch (e) {
               console.error("Failed to parse PROFILE_DATA JSON", e);
@@ -428,8 +443,10 @@ export async function POST(req: NextRequest) {
               });
 
               // TRIGGER MATCHING
-              console.log("MATCHING TRIGGERED for:", profileId, "RECRUITER");
-              await processNewMatch(profileId, "RECRUITER");
+              console.log("JOB SAVED - running matching...");
+              const { matches, notifications } = await processNewMatch(profileId, "RECRUITER");
+              console.log("MATCHES FOUND:", matches.length);
+              console.log("NOTIFICATIONS CREATED:", notifications);
             } catch (e) {
               console.error("Failed to parse JOB_DATA JSON", e);
             }

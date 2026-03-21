@@ -10,7 +10,7 @@ export default function SignInPage() {
       alignItems:"center",
       justifyContent:"center"
     }}>
-      <SignIn afterSignInUrl="/dashboard/recruiter" />
+      <SignIn routing="path" path="/sign-in" afterSignInUrl="/dashboard/recruiter" />
     </div>
   )
 }

@@ -33,7 +33,7 @@ export default function SignUpPage() {
           ))}
         </div>
         <div style={{flex:1}}>
-          <SignUp afterSignUpUrl="/role-select" />
+          <SignUp routing="path" path="/sign-up" afterSignUpUrl="/role-select" />
         </div>
       </div>
     </div>
