@@ -1,266 +1,293 @@
-/* eslint-disable */
-// @ts-nocheck
-"use client";
-import { useEffect, useState, useRef } from "react";
-import { useUser } from "@clerk/nextjs";
-import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+"use client"
+import { useState, useEffect, useRef } from "react"
+import { useUser } from "@clerk/nextjs"
+import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
 
-export default function DirectChatPage() {
-  const { user } = useUser();
-  const params = useParams();
-  const router = useRouter();
-  const matchId = params.match_id as string;
-
-  const [match, setMatch] = useState<any>(null);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [newMsg, setNewMsg] = useState("");
-  const [myProfileId, setMyProfileId] = useState("");
-  const [otherName, setOtherName] = useState("Chat Partner");
-  const [loading, setLoading] = useState(true);
-  const [chatLocked, setChatLocked] = useState(false);
-  const [showHireBanner, setShowHireBanner] = useState(false);
-  const [hireSubmitted, setHireSubmitted] = useState(false);
-  const [myRole, setMyRole] = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
+export default function DirectChatPage({ 
+  params 
+}: { 
+  params: { match_id: string } 
+}) {
+  const { user } = useUser()
+  const router = useRouter()
+  const [messages, setMessages] = useState<any[]>([])
+  const [input, setInput] = useState("")
+  const [match, setMatch] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!user) return;
-    loadChat();
-  }, [user]);
+    if (user) loadData()
+  }, [user])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
-  useEffect(() => {
-    if (!matchId) return;
-    const channel = supabase
-      .channel(`direct-${matchId}`)
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "direct_messages",
-        filter: `match_id=eq.${matchId}`,
-      }, (payload: any) => {
-        setMessages((prev) => [...prev, payload.new]);
-      })
-      .subscribe();
+  async function loadData() {
+    // Get current user profile
+    const { data: p } = await supabase
+      .from('profiles')
+      .select('id, full_name, role')
+      .eq('clerk_user_id', user!.id)
+      .single()
+    setProfile(p)
 
-    return () => { supabase.removeChannel(channel); };
-  }, [matchId]);
-
-  async function loadChat() {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("clerk_user_id", user!.id)
-      .maybeSingle();
-
-    if (!profile) return;
-    setMyProfileId(profile.id);
-    setMyRole(profile.role?.toUpperCase() || "");
-
+    // Get match details
     const { data: m } = await supabase
-      .from("matches")
+      .from('matches')
       .select(`
-        *, 
-        job_listings(
-          profile_id, 
-          job_title, 
-          company_name, 
-          profiles(full_name)
-        ), 
+        *,
+        job_listings(job_title, company_name, 
+          profiles(full_name, email)),
         candidate_profiles:candidate_id(
-          profile_id, 
-          job_title, 
-          profiles(full_name)
+          job_title,
+          profiles:profile_id(full_name, email)
         )
       `)
-      .eq("id", match_id)
-      .maybeSingle();
-
-    if (!m) {
-      setLoading(false);
-      return;
+      .eq('id', params.match_id)
+      .single()
+    
+    // Fix candidate profiles join if needed
+    if (m && m.candidate_profiles) {
+      if (Array.isArray(m.candidate_profiles.profiles)) {
+        m.candidate_profiles.profiles = m.candidate_profiles.profiles[0]
+      }
     }
+    setMatch(m)
 
-    if (!m.chat_unlocked) {
-      setChatLocked(true);
-      setMatch(m);
-      setLoading(false);
-      return;
-    }
-
-    setMatch(m);
-
-    // Determine other person's name
-    if (profile.role?.toUpperCase() === "RECRUITER") {
-      setOtherName(m.candidate_profiles?.profiles?.full_name || "Candidate");
-    } else {
-      setOtherName(m.job_listings?.profiles?.full_name || "Recruiter");
-    }
-
-    // Check if 3 days old
-    const created = new Date(m.created_at);
-    const now = new Date();
-    const daysDiff = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
-    if (daysDiff >= 3 && m.hire_status === "pending") {
-      setShowHireBanner(true);
+    if (!m?.chat_unlocked) {
+      setLoading(false)
+      return
     }
 
     // Load messages
     const { data: msgs } = await supabase
-      .from("direct_messages")
-      .select("*, profiles:sender_id(full_name)")
-      .eq("match_id", match_id)
-      .order("created_at", { ascending: true });
+      .from('direct_messages')
+      .select('*, profiles:sender_id(full_name)')
+      .eq('match_id', params.match_id)
+      .order('created_at', { ascending: true })
+    setMessages(msgs || [])
+    setLoading(false)
 
-    setMessages(msgs || []);
-    setLoading(false);
+    // Subscribe to new messages
+    supabase
+      .channel('direct-' + params.match_id)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'direct_messages',
+        filter: 'match_id=eq.' + params.match_id
+      }, async (payload) => {
+        // Fetch full message with profile data
+        const { data: newMsg } = await supabase
+          .from('direct_messages')
+          .select('*, profiles:sender_id(full_name)')
+          .eq('id', payload.new.id)
+          .single()
+        
+        if (newMsg) {
+          setMessages(prev => {
+            if (prev.find(m => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          })
+        }
+      })
+      .subscribe()
   }
 
   async function sendMessage() {
-    if (!newMsg.trim()) return;
-    const msgText = newMsg;
-    setNewMsg("");
-
-    await supabase.from("direct_messages").insert({
-      match_id: matchId,
-      sender_id: myProfileId,
-      content: msgText,
-    });
+    if (!input.trim() || !profile) return
+    const content = input.trim()
+    setInput("")
+    
+    await supabase.from('direct_messages').insert({
+      match_id: params.match_id,
+      sender_id: profile.id,
+      content
+    })
+    
+    inputRef.current?.focus()
   }
 
-  async function handleHireResponse(response: string) {
-    setHireSubmitted(true);
-    await fetch("/api/hiries/hire-response", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ match_id: matchId, response }),
-    });
-  }
+  if (loading) return (
+    <div style={{
+      display: 'flex', alignItems: 'center',
+      justifyContent: 'center', height: '100vh',
+      fontFamily: 'Inter, sans-serif',
+      background: '#1a1a1a', color: '#fff'
+    }}>Loading...</div>
+  )
 
-  if (loading) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#1A1A1A", color: "#fff" }}>
-        <p>Loading chat...</p>
-      </div>
-    );
-  }
+  if (!match?.chat_unlocked) return (
+    <div style={{
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      height: '100vh', fontFamily: 'Inter, sans-serif',
+      background: '#1a1a1a', color: '#fff'
+    }}>
+      <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔒</div>
+      <h2 style={{ color: '#fff', marginBottom: '8px' }}>
+        Chat Not Unlocked Yet
+      </h2>
+      <p style={{ color: '#888', marginBottom: '24px' }}>
+        Both parties need to accept using Hiries
+      </p>
+      <button onClick={() => router.back()} style={{
+        background: '#FF6B3D', color: 'white',
+        padding: '10px 24px', borderRadius: '12px',
+        border: 'none', cursor: 'pointer', fontWeight: 'bold'
+      }}>Go Back</button>
+    </div>
+  )
 
-  if (chatLocked) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#1A1A1A", color: "#E0E0E0", fontFamily: "'Inter', sans-serif", justifyContent: "center", alignItems: "center", padding: "40px", textAlign: "center" }}>
-        <p style={{ fontSize: "64px", margin: "0 0 24px" }}>🔒</p>
-        <h1 style={{ fontSize: "24px", fontWeight: "700", margin: "0 0 16px", color: "#fff" }}>Chat Not Unlocked Yet</h1>
-        <p style={{ fontSize: "16px", color: "#888", maxWidth: "400px", lineHeight: "1.6", margin: "0 0 32px" }}>
-          Both parties must accept the match to unlock direct messaging. 
-          {myRole === "RECRUITER" 
-            ? (match?.recruiter_accepted ? " You've accepted. Waiting for the candidate..." : " You haven't accepted this match yet.") 
-            : (match?.candidate_accepted ? " You've accepted. Waiting for the recruiter..." : " You haven't accepted this match yet.")
-          }
-        </p>
-        <button 
-          onClick={() => router.back()}
-          style={{ padding: "12px 24px", borderRadius: "12px", border: "1px solid #333", background: "#222", color: "#E0E0E0", fontWeight: "600", cursor: "pointer" }}
-        >
-          Go Back
-        </button>
-      </div>
-    );
-  }
+  const otherParty = profile?.role === 'recruiter'
+    ? (Array.isArray(match.candidate_profiles?.profiles) ? match.candidate_profiles.profiles[0]?.full_name : match.candidate_profiles?.profiles?.full_name)
+    : (Array.isArray(match.job_listings?.profiles) ? match.job_listings.profiles[0]?.full_name : match.job_listings?.profiles?.full_name)
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#1A1A1A", color: "#E0E0E0", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{
+      display: 'flex', flexDirection: 'column',
+      height: '100vh', background: '#1a1a1a',
+      fontFamily: 'Inter, sans-serif', color: '#fff'
+    }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid #2A2A2A", background: "#222" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <button onClick={() => router.back()} style={{ background: "none", border: "none", color: "#FF6B3D", fontSize: "20px", cursor: "pointer" }}>←</button>
-          <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg, #FF6B3D, #FF8F6B)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", color: "#fff" }}>
-            {otherName.charAt(0)}
+      <div style={{
+        background: '#222', padding: '16px 24px',
+        borderBottom: '1px solid #333',
+        display: 'flex', alignItems: 'center',
+        gap: '12px'
+      }}>
+        <button onClick={() => router.back()} style={{
+          background: 'none', border: 'none',
+          cursor: 'pointer', fontSize: '18px', color: '#fff'
+        }}>←</button>
+        <div style={{
+          width: '40px', height: '40px',
+          borderRadius: '50%', background: '#FF6B3D',
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'center', color: 'white',
+          fontWeight: '600'
+        }}>
+          {otherParty?.[0]?.toUpperCase() || '?'}
+        </div>
+        <div>
+          <div style={{ fontWeight: '600', fontSize: '15px' }}>
+            {otherParty}
           </div>
-          <div>
-            <p style={{ margin: 0, fontWeight: "600", fontSize: "16px" }}>{otherName}</p>
-            <p style={{ margin: 0, fontSize: "12px", color: "#888" }}>
-              {match?.job_listings?.job_title || "Direct Chat"} • Score: {match?.score}%
-            </p>
+          <div style={{ fontSize: '12px', color: '#22c55e' }}>
+            ✓ Chat Unlocked
           </div>
         </div>
-        {match?.hire_status === "hired" && (
-          <span style={{ background: "#22C55E", color: "#fff", padding: "4px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: "600" }}>
-            ✅ Hired
-          </span>
-        )}
       </div>
 
-      {/* Hire Banner */}
-      {showHireBanner && !hireSubmitted && (
-        <div style={{ padding: "16px 24px", background: "linear-gradient(135deg, #2A1A0A, #1A1A2A)", border: "1px solid #FF6B3D33", borderRadius: "12px", margin: "12px 24px", textAlign: "center" }}>
-          <p style={{ margin: "0 0 12px", fontWeight: "600", fontSize: "15px" }}>How did it go? Let us know!</p>
-          <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={() => handleHireResponse("hired")} style={{ padding: "8px 20px", borderRadius: "8px", border: "none", background: "#22C55E", color: "#fff", fontWeight: "600", cursor: "pointer" }}>
-              We Got Hired! 🎉
-            </button>
-            <button onClick={() => handleHireResponse("ongoing")} style={{ padding: "8px 20px", borderRadius: "8px", border: "1px solid #555", background: "transparent", color: "#E0E0E0", fontWeight: "600", cursor: "pointer" }}>
-              Still in Process
-            </button>
-            <button onClick={() => handleHireResponse("not_interested")} style={{ padding: "8px 20px", borderRadius: "8px", border: "1px solid #555", background: "transparent", color: "#888", fontWeight: "600", cursor: "pointer" }}>
-              Not Interested
-            </button>
-          </div>
-        </div>
-      )}
-      {hireSubmitted && (
-        <div style={{ padding: "12px 24px", margin: "12px 24px", background: "#22C55E22", borderRadius: "12px", textAlign: "center", color: "#22C55E", fontWeight: "600" }}>
-          ✅ Response submitted. Thank you!
-        </div>
-      )}
-
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div style={{
+        flex: 1, overflowY: 'auto',
+        padding: '24px', paddingBottom: '100px'
+      }}>
         {messages.length === 0 && (
-          <div style={{ textAlign: "center", color: "#666", padding: "40px 0" }}>
-            <p style={{ fontSize: "32px", margin: "0 0 8px" }}>💬</p>
-            <p style={{ margin: 0 }}>No messages yet. Say hello!</p>
+          <div style={{
+            textAlign: 'center', color: '#666',
+            marginTop: '40px'
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>
+              💬
+            </div>
+            <p>Chat unlocked! Say hello to {otherParty}</p>
           </div>
         )}
-        {messages.map((msg) => {
-          const isMine = msg.sender_id === myProfileId;
+        {messages.map((msg: any, i) => {
+          const isMe = msg.sender_id === profile?.id
+          const senderName = Array.isArray(msg.profiles) ? msg.profiles[0]?.full_name : msg.profiles?.full_name;
           return (
-            <div key={msg.id} style={{ display: "flex", justifyContent: isMine ? "flex-end" : "flex-start" }}>
+            <div key={i} style={{
+              display: 'flex',
+              justifyContent: isMe ? 'flex-end' : 'flex-start',
+              marginBottom: '12px'
+            }}>
               <div style={{
-                maxWidth: "70%", padding: "10px 16px", borderRadius: isMine ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                background: isMine ? "linear-gradient(135deg, #FF6B3D, #FF8F6B)" : "#2A2A2A",
-                color: isMine ? "#fff" : "#E0E0E0",
+                maxWidth: '70%',
+                padding: '12px 16px',
+                borderRadius: isMe 
+                  ? '16px 16px 4px 16px'
+                  : '16px 16px 16px 4px',
+                background: isMe ? '#FF6B3D22' : '#2A2A2A',
+                border: isMe 
+                  ? '1px solid #FF6B3D44'
+                  : '1px solid #333',
+                fontSize: '15px',
+                lineHeight: '1.5',
+                color: '#fff'
               }}>
-                {!isMine && <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#FF6B3D", fontWeight: "600" }}>{(Array.isArray(msg.profiles) ? msg.profiles[0]?.full_name : msg.profiles?.full_name) || "User"}</p>}
-                <p style={{ margin: 0, fontSize: "14px", lineHeight: "1.5" }}>{msg.content}</p>
-                <p style={{ margin: "4px 0 0", fontSize: "10px", color: isMine ? "#fff9" : "#666", textAlign: "right" }}>
-                  {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </p>
+                {!isMe && (
+                  <div style={{
+                    fontSize: '11px', color: '#FF6B3D',
+                    marginBottom: '4px', fontWeight: '600'
+                  }}>
+                    {senderName}
+                  </div>
+                )}
+                {msg.content}
+                <div style={{
+                  fontSize: '10px', color: '#666',
+                  marginTop: '4px', textAlign: 'right'
+                }}>
+                  {new Date(msg.created_at).toLocaleTimeString(
+                    [], { hour: '2-digit', minute: '2-digit' }
+                  )}
+                </div>
               </div>
             </div>
-          );
+          )
         })}
         <div ref={bottomRef} />
       </div>
 
       {/* Input */}
-      <div style={{ padding: "12px 24px", borderTop: "1px solid #2A2A2A", background: "#222" }}>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <input
-            value={newMsg}
-            onChange={(e) => setNewMsg(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Type a message..."
-            style={{ flex: 1, padding: "12px 16px", borderRadius: "12px", border: "1px solid #333", background: "#2A2A2A", color: "#E0E0E0", fontSize: "14px", outline: "none" }}
-          />
-          <button onClick={sendMessage} style={{ padding: "12px 20px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg, #FF6B3D, #FF8F6B)", color: "#fff", fontWeight: "600", cursor: "pointer", fontSize: "16px" }}>
-            →
-          </button>
-        </div>
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        background: '#222',
+        borderTop: '1px solid #333',
+        padding: '16px 24px',
+        display: 'flex', gap: '12px',
+        alignItems: 'center', zIndex: 100
+      }}>
+        <input
+          ref={inputRef}
+          autoFocus
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault()
+              sendMessage()
+            }
+          }}
+          placeholder={'Message ' + otherParty + '...'}
+          style={{
+            flex: 1, padding: '12px 20px',
+            borderRadius: '24px',
+            border: '1px solid #333',
+            fontSize: '15px', outline: 'none',
+            background: '#1a1a1a', color: '#fff'
+          }}
+        />
+        <button
+          onClick={sendMessage}
+          disabled={!input.trim()}
+          style={{
+            width: '44px', height: '44px',
+            borderRadius: '50%',
+            background: input.trim() ? '#FF6B3D' : '#333',
+            border: 'none', cursor: 'pointer',
+            fontSize: '18px', color: 'white'
+          }}
+        >→</button>
       </div>
     </div>
-  );
+  )
 }

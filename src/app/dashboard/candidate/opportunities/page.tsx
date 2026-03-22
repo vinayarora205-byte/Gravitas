@@ -242,9 +242,23 @@ export default function OpportunitiesPage() {
                       <div className="flex gap-2">
                         {/* Chat Unlocked — Open Chat */}
                         {chatUnlocked && (
-                          <Button variant="primary" size="sm" onClick={() => router.push(`/direct-chat/${match.id}`)}>
-                            Open Chat 💬
-                          </Button>
+                          <button 
+                            onClick={() => router.push('/direct-chat/' + match.id)}
+                            style={{
+                              background: '#22c55e',
+                              color: 'white',
+                              padding: '12px 24px',
+                              borderRadius: '12px',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: '15px',
+                              fontWeight: '600',
+                              width: '100%',
+                              marginTop: '12px'
+                            }}
+                          >
+                            💬 Open Direct Chat
+                          </button>
                         )}
 
                         {/* Recruiter already accepted, candidate hasn't */}

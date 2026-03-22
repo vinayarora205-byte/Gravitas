@@ -274,9 +274,23 @@ export default function TalentPoolPage() {
 
                       {/* Chat unlocked */}
                       {chatUnlocked && (
-                        <Button variant="primary" size="sm" onClick={() => router.push(`/direct-chat/${c.id}`)}>
-                          Open Chat 💬
-                        </Button>
+                        <button 
+                          onClick={() => router.push('/direct-chat/' + c.id)}
+                          style={{
+                            background: '#22c55e',
+                            color: 'white',
+                            padding: '12px 24px',
+                            borderRadius: '12px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '15px',
+                            fontWeight: '600',
+                            width: '100%',
+                            marginTop: '12px'
+                          }}
+                        >
+                          💬 Open Direct Chat
+                        </button>
                       )}
 
                       {/* Candidate already accepted, recruiter hasn't */}
