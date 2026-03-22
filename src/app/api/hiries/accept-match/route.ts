@@ -271,7 +271,7 @@ export async function POST(req: Request) {
           recruiterProfile.clerk_user_id,
           "🎉 Chat unlocked!\n\n" +
           "You can now message " + (candidateProfile?.full_name || "the candidate") + " directly.\n" +
-          "Open chat: /direct-chat/" + match_id
+          "Open Inbox: /dashboard/recruiter/messages"
         );
       }
 
@@ -280,7 +280,7 @@ export async function POST(req: Request) {
           candidateProfile.clerk_user_id,
           "🎉 Chat unlocked!\n\n" +
           "You can now message " + (match.job_listings?.company_name || "the recruiter") + " directly.\n" +
-          "Open chat: /direct-chat/" + match_id
+          "Open Inbox: /dashboard/candidate/messages"
         );
       }
 
