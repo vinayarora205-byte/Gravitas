@@ -1,5 +1,6 @@
 /* eslint-disable */
 // @ts-nocheck
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
 const supabaseAdmin = createSupabaseAdmin(

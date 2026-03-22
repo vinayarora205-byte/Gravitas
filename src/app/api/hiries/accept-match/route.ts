@@ -1,5 +1,6 @@
 /* eslint-disable */
 // @ts-nocheck
+export const dynamic = 'force-dynamic'
 import { NextResponse } from "next/server";
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
 import { auth } from "@clerk/nextjs/server";

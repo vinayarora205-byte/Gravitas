@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 /* eslint-disable */
 // @ts-nocheck
 import { NextResponse } from "next/server";
@@ -33,12 +34,12 @@ export async function GET(req: Request) {
 
     if (error) throw error;
 
-    const transformed = data.map(t => ({
+    const transformed = data.map((t: any) => ({
       id: t.id,
       amount: t.amount,
       type: t.type,
       date: t.created_at,
-      email: t.profiles?.email || "Unknown"
+      email: (Array.isArray(t.profiles) ? t.profiles[0]?.email : t.profiles?.email) || "Unknown"
     }));
 
     return NextResponse.json(transformed);
