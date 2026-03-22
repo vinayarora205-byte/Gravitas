@@ -41,6 +41,12 @@ export default async function CandidateDashboard() {
           <h1 className="text-h2 text-foreground font-semibold mb-2">Welcome, {profile.full_name || 'Candidate'}</h1>
           <p className="text-muted text-body">Manage your gravity matches and opportunities.</p>
         </div>
+        <div className="flex items-center gap-3">
+          <span className="px-4 py-2 rounded-xl bg-accent/10 text-accent font-bold text-sm border border-accent/20">
+            💎 {profile.hiries_balance || 0} Hiries
+          </span>
+          <a href="/pricing" className="text-xs text-muted hover:text-accent underline">Need more?</a>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">

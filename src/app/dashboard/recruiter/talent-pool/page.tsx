@@ -5,44 +5,31 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 
-interface TalentMatch {
-  id: string;
-  score: number;
-  status: string;
-  created_at: string;
-  job_posted: string;
-  candidate_profiles: {
-    job_title: string;
-    skills: string[];
-    salary_min: number;
-    salary_max: number;
-    work_type: string;
-    experience_years: string;
-    location: string;
-  };
-  profiles: {
-    full_name: string;
-    email: string;
-    whatsapp_number: string;
-    linkedin_url: string;
-    portfolio_url: string;
-  };
-}
-
 export default function TalentPoolPage() {
   const { user, isLoaded } = useUser();
-  const [candidates, setCandidates] = useState<TalentMatch[]>([]);
+  const router = useRouter();
+  const [candidates, setCandidates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [balance, setBalance] = useState(0);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  const fetchBalance = async () => {
+    const res = await fetch("/api/hiries/balance");
+    if (res.ok) {
+      const data = await res.json();
+      setBalance(data.balance || 0);
+    }
+  };
 
   const fetchTalent = async () => {
     if (!user) return;
 
-    // 1 & 2. Get profile from profiles table
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
@@ -51,7 +38,6 @@ export default function TalentPoolPage() {
 
     if (!profile) { setLoading(false); return; }
 
-    // Get this recruiter's job listing IDs
     const { data: myJobs } = await supabase
       .from("job_listings")
       .select("id")
@@ -61,31 +47,17 @@ export default function TalentPoolPage() {
 
     const jobIds = myJobs.map(j => j.id);
 
-    // Fetch matches for those jobs with deep joins for candidate details
     const { data, error } = await supabase
       .from("matches")
       .select(`
-        id,
-        score,
-        status,
-        created_at,
-        job_listings!job_id (
-          job_title
-        ),
+        id, score, status, created_at,
+        candidate_accepted, recruiter_accepted, chat_unlocked, hire_status,
+        job_listings!job_id ( job_title ),
         profiles!candidate_id (
-          full_name,
-          email,
-          whatsapp_number,
-          linkedin_url,
-          portfolio_url,
+          full_name, email, whatsapp_number, linkedin_url, portfolio_url,
           candidate_profiles!profile_id (
-            job_title,
-            skills,
-            salary_min,
-            salary_max,
-            work_type,
-            experience_years,
-            location
+            job_title, skills, salary_min, salary_max,
+            work_type, experience_years, location
           )
         )
       `)
@@ -95,18 +67,14 @@ export default function TalentPoolPage() {
     if (error) {
       console.error("Talent pool fetch error:", error);
     } else {
-      // TypeScript mapping to handle nested Supabase objects/arrays safely
-      const transformedMatches: TalentMatch[] = (data || []).map((m: any) => {
+      const transformedMatches = (data || []).map((m: any) => {
         const candidateUser = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
-        const candProfile = Array.isArray(candidateUser?.candidate_profiles) 
-          ? candidateUser.candidate_profiles[0] 
+        const candProfile = Array.isArray(candidateUser?.candidate_profiles)
+          ? candidateUser.candidate_profiles[0]
           : candidateUser?.candidate_profiles;
-          
+
         return {
-          id: m.id,
-          score: m.score,
-          status: m.status,
-          created_at: m.created_at,
+          ...m,
           job_posted: m.job_listings?.job_title || "Unknown Role",
           profiles: {
             full_name: candidateUser?.full_name || "Anonymous Candidate",
@@ -123,7 +91,7 @@ export default function TalentPoolPage() {
             work_type: candProfile?.work_type || "Not specified",
             experience_years: candProfile?.experience_years || "0",
             location: candProfile?.location || "Not specified",
-          }
+          },
         };
       });
       setCandidates(transformedMatches);
@@ -134,18 +102,44 @@ export default function TalentPoolPage() {
   useEffect(() => {
     if (isLoaded) {
       fetchTalent();
+      fetchBalance();
     }
   }, [user, isLoaded]);
 
-  const handleConnect = async (matchId: string) => {
+  const handleAcceptMatch = async (matchId: string) => {
+    setActionLoading(matchId);
     try {
-      const res = await fetch(`/api/match/accept?match_id=${matchId}`);
-      if (res.ok) {
-        fetchTalent();
+      const res = await fetch("/api/hiries/accept-match", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ match_id: matchId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to accept match");
+      } else {
+        setBalance(data.balance);
       }
+      fetchTalent();
     } catch (err) {
-      console.error("Connect error:", err);
+      console.error("Accept error:", err);
     }
+    setActionLoading(null);
+  };
+
+  const handleDeclineMatch = async (matchId: string) => {
+    setActionLoading(matchId);
+    try {
+      await fetch("/api/hiries/decline-match", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ match_id: matchId }),
+      });
+      fetchTalent();
+    } catch (err) {
+      console.error("Decline error:", err);
+    }
+    setActionLoading(null);
   };
 
   if (!isLoaded || loading) {
@@ -168,9 +162,22 @@ export default function TalentPoolPage() {
 
   return (
     <div className="fade-in max-w-5xl mx-auto py-8 px-4">
-      <div className="mb-10">
-        <h1 className="text-h2 font-semibold text-foreground mb-2">Talent Pool</h1>
-        <p className="text-muted text-body-lg">Manage and connect with top-matched candidates for your active roles.</p>
+      <div className="mb-10 flex justify-between items-start flex-wrap gap-4">
+        <div>
+          <h1 className="text-h2 font-semibold text-foreground mb-2">Talent Pool</h1>
+          <p className="text-muted text-body-lg">Manage and connect with top-matched candidates for your active roles.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="px-4 py-2 rounded-xl bg-accent/10 text-accent font-bold text-sm border border-accent/20">
+            💎 {balance} Hiries
+          </span>
+          <button
+            onClick={() => router.push("/pricing")}
+            className="text-xs text-muted hover:text-accent underline"
+          >
+            Need more?
+          </button>
+        </div>
       </div>
 
       {candidates.length === 0 ? (
@@ -183,10 +190,16 @@ export default function TalentPoolPage() {
             const isExpanded = expandedId === c.id;
             const candUser = c.profiles;
             const candDetails = c.candidate_profiles;
+            const isBothAccepted = c.candidate_accepted && c.recruiter_accepted;
+            const isRecruiterAccepted = c.recruiter_accepted;
+            const isCandidateAccepted = c.candidate_accepted;
+            const chatUnlocked = c.chat_unlocked;
+            const isHired = c.hire_status === "hired";
+            const isRejected = c.status === "REJECTED";
 
             return (
-              <Card 
-                key={c.id} 
+              <Card
+                key={c.id}
                 className="overflow-hidden transition-all duration-300 border-border hover:border-accent/40 flex flex-col h-full"
               >
                 <div className="p-6 flex-grow flex flex-col">
@@ -194,11 +207,11 @@ export default function TalentPoolPage() {
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/10 to-accent/30 flex items-center justify-center text-lg font-bold text-accent shrink-0">
-                        {candUser.full_name.charAt(0)}
+                        {chatUnlocked ? candUser.full_name.charAt(0) : "?"}
                       </div>
                       <div>
-                        <h3 className="text-h4 font-semibold text-foreground line-clamp-1" title={candUser.full_name}>
-                          {candUser.full_name}
+                        <h3 className="text-h4 font-semibold text-foreground line-clamp-1" title={chatUnlocked ? candUser.full_name : "Hidden"}>
+                          {chatUnlocked ? candUser.full_name : "🔒 Name Hidden"}
                         </h3>
                         <p className="text-xs font-medium text-accent line-clamp-1">For: {c.job_posted}</p>
                       </div>
@@ -206,29 +219,38 @@ export default function TalentPoolPage() {
                   </div>
 
                   {/* Badges */}
-                  <div className="flex items-center gap-2 mb-5">
+                  <div className="flex items-center gap-2 mb-5 flex-wrap">
                     <Badge variant={getScoreColor(c.score)}>
                       {c.score}% Match
                     </Badge>
-                    <Badge variant={c.status === 'ACCEPTED' ? 'success' : c.status === 'REJECTED' ? 'error' : 'default'}>
-                      {c.status}
-                    </Badge>
+                    {isHired && <Badge variant="success">✅ Hired</Badge>}
+                    {chatUnlocked && !isHired && <Badge variant="success">💬 Chat Open</Badge>}
+                    {isRecruiterAccepted && !isCandidateAccepted && !isRejected && !chatUnlocked && (
+                      <Badge variant="warning">⏳ Waiting</Badge>
+                    )}
+                    {!isRecruiterAccepted && isCandidateAccepted && !isRejected && !chatUnlocked && (
+                      <Badge variant="warning">💎 Accept to Connect</Badge>
+                    )}
+                    {isRejected && <Badge variant="error">Declined</Badge>}
+                    {!isRecruiterAccepted && !isCandidateAccepted && !isRejected && (
+                      <Badge variant="default">PENDING</Badge>
+                    )}
                   </div>
 
                   {/* Want Details */}
                   <div className="space-y-3 mb-5">
                     <p className="text-body font-medium text-foreground">{candDetails.job_title}</p>
                     <div className="flex flex-wrap gap-2">
-                       <span className="text-xs text-muted flex items-center gap-1">🗓 {candDetails.experience_years}y exp</span>
-                       <span className="text-xs text-muted flex items-center gap-1">💰 {formatCurrency(candDetails.salary_min)}</span>
-                       <span className="text-xs text-muted flex items-center gap-1">📍 {candDetails.location}</span>
-                       <span className="text-xs text-muted flex items-center gap-1">💼 {candDetails.work_type}</span>
+                      <span className="text-xs text-muted flex items-center gap-1">🗓 {candDetails.experience_years}y exp</span>
+                      <span className="text-xs text-muted flex items-center gap-1">💰 {formatCurrency(candDetails.salary_min)}</span>
+                      <span className="text-xs text-muted flex items-center gap-1">📍 {candDetails.location}</span>
+                      <span className="text-xs text-muted flex items-center gap-1">💼 {candDetails.work_type}</span>
                     </div>
                   </div>
 
-                  {/* Skills (small orange tags) */}
+                  {/* Skills */}
                   <div className="flex flex-wrap gap-1.5 mb-6 flex-grow">
-                    {candDetails.skills.slice(0, 5).map((skill, i) => (
+                    {candDetails.skills.slice(0, 5).map((skill: string, i: number) => (
                       <span key={i} className="px-2 py-1 bg-accent/10 text-accent text-xs font-medium rounded-md border border-accent/20">
                         {skill}
                       </span>
@@ -242,26 +264,47 @@ export default function TalentPoolPage() {
 
                   {/* Actions */}
                   <div className="mt-auto space-y-4 pt-4 border-t border-border/50">
-                    <div className="flex items-center justify-between">
-                      <button 
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <button
                         onClick={() => setExpandedId(isExpanded ? null : c.id)}
                         className="text-accent hover:underline font-medium text-sm"
                       >
-                        {isExpanded ? "Hide Details ↑" : "View Details ↓"}
+                        {isExpanded ? "Hide ↑" : "Details ↓"}
                       </button>
 
-                      {c.status === 'PENDING' && (
-                        <Button 
-                          variant="primary" 
-                          size="sm"
-                          onClick={() => handleConnect(c.id)}
-                        >
-                          Connect
+                      {/* Chat unlocked */}
+                      {chatUnlocked && (
+                        <Button variant="primary" size="sm" onClick={() => router.push(`/direct-chat/${c.id}`)}>
+                          Open Chat 💬
                         </Button>
+                      )}
+
+                      {/* Pending — Accept/Decline */}
+                      {!isRecruiterAccepted && !isRejected && !chatUnlocked && (
+                        <div className="flex gap-1">
+                          {balance >= 2 ? (
+                            <Button variant="primary" size="sm" onClick={() => handleAcceptMatch(c.id)} disabled={actionLoading === c.id}>
+                              {actionLoading === c.id ? "..." : "Accept (2💎)"}
+                            </Button>
+                          ) : (
+                            <Button variant="primary" size="sm" onClick={() => router.push("/pricing")}>
+                              Get 💎
+                            </Button>
+                          )}
+                          <Button variant="secondary" size="sm" onClick={() => handleDeclineMatch(c.id)} disabled={actionLoading === c.id}>
+                            ✕
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Waiting */}
+                      {isRecruiterAccepted && !isCandidateAccepted && !isRejected && !chatUnlocked && (
+                        <span className="text-xs text-muted">⏳ Waiting for candidate...</span>
                       )}
                     </div>
 
-                    {isExpanded && c.status === 'ACCEPTED' && (
+                    {/* Expanded Contact Details — only when chat unlocked */}
+                    {isExpanded && chatUnlocked && (
                       <div className="fade-slide-up bg-black/5 dark:bg-white/5 rounded-xl p-4 border border-border">
                         <h4 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">Contact Details</h4>
                         <div className="space-y-3">
@@ -294,6 +337,13 @@ export default function TalentPoolPage() {
                             </div>
                           )}
                         </div>
+                      </div>
+                    )}
+
+                    {/* Locked message when expanded but no chat */}
+                    {isExpanded && !chatUnlocked && !isRejected && (
+                      <div className="rounded-xl p-4 border border-border bg-foreground/5 text-center">
+                        <p className="text-muted text-sm">🔒 Contact details will be visible after both parties accept.</p>
                       </div>
                     )}
                   </div>

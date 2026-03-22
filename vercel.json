@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/hire-check",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}

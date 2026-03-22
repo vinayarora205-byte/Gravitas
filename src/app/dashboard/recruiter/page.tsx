@@ -17,6 +17,9 @@ export default function RecruiterDashboard() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [matchesCount, setMatchesCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [hBalance, setHBalance] = useState(0);
+  const [hTransactions, setHTransactions] = useState<any[]>([]);
+  const [showHiries, setShowHiries] = useState(false);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -69,6 +72,10 @@ export default function RecruiterDashboard() {
 
     if (isSignedIn) {
       fetchData();
+      fetch('/api/hiries/balance').then(r => r.json()).then(d => {
+        setHBalance(d.balance || 0);
+        setHTransactions((d.transactions || []).slice(0, 5));
+      }).catch(() => {});
     }
   }, [user, isSignedIn, router]);
 
@@ -88,7 +95,32 @@ export default function RecruiterDashboard() {
           <h1 className="text-h2 text-foreground font-semibold mb-2">Welcome, {profile?.full_name || 'Recruiter'}</h1>
           <p className="text-muted text-body">Here is an overview of your recruiting pipeline.</p>
         </div>
-        <Button variant="primary" onClick={() => router.push('/chat')}>Post Job via GAIA →</Button>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <button onClick={() => setShowHiries(!showHiries)} className="px-4 py-2 rounded-xl bg-accent/10 text-accent font-bold text-sm border border-accent/20 hover:bg-accent/20 transition-colors">
+              💎 {hBalance} Hiries
+            </button>
+            {showHiries && (
+              <div className="absolute right-0 top-12 w-72 bg-card border border-border rounded-xl shadow-lg z-50 p-4">
+                <h4 className="text-sm font-bold text-foreground mb-3">💎 {hBalance} Hiries Available</h4>
+                {hTransactions.length > 0 ? (
+                  <div className="space-y-2 mb-3">
+                    {hTransactions.map((t: any, i: number) => (
+                      <div key={i} className="flex justify-between text-xs text-muted border-b border-border/50 pb-1">
+                        <span>{t.type}</span>
+                        <span className={t.amount > 0 ? 'text-green-400' : 'text-red-400'}>{t.amount > 0 ? '+' : ''}{t.amount}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted mb-3">No transactions yet</p>
+                )}
+                <a href="/pricing" className="text-xs text-accent hover:underline">Need more? Contact us →</a>
+              </div>
+            )}
+          </div>
+          <Button variant="primary" onClick={() => router.push('/chat')}>Post Job via GAIA →</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
