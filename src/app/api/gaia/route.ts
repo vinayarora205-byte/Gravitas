@@ -379,14 +379,62 @@ export async function processNewMatch(
   return { matches: matchesFound, notifications: notificationsCreated }
 }
 
+async function extractTextFromFile(
+  fileData: string,
+  fileType: string,
+  fileName: string
+): Promise<string> {
+  try {
+    const buffer = Buffer.from(fileData, 'base64')
+    
+    // Handle DOCX files
+    if (fileName.endsWith('.docx') || 
+        fileType.includes('word') ||
+        fileType.includes('docx')) {
+      const mammoth = require('mammoth')
+      const result = await mammoth.extractRawText({ buffer })
+      console.log("DOCX TEXT EXTRACTED:", result.value.slice(0,200))
+      return result.value
+    }
+    
+    // Handle PDF files
+    if (fileType.includes('pdf') || 
+        fileName.endsWith('.pdf')) {
+      const pdfParse = require('pdf-parse')
+      const result = await pdfParse(buffer)
+      console.log("PDF TEXT EXTRACTED:", result.text.slice(0,200))
+      return result.text
+    }
+    
+    // Handle images - return base64 for Claude vision
+    if (fileType.includes('image')) {
+      return 'IMAGE_FILE'
+    }
+    
+    return ''
+  } catch (err) {
+    console.error("FILE EXTRACTION ERROR:", err)
+    return ''
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { message, conversationId, profileId, role, fileData, fileName, fileType } = await req.json();
-    console.log("1. MESSAGE RECEIVED:", message);
-    console.log("2. ROLE:", role);
-    console.log("FILE:", fileName, fileType);
+    console.log("=== GAIA API CALLED ===")
+    
+    const body = await req.json();
+    const { message, conversationId, profileId, role, fileData, fileName, fileType } = body;
+    
+    console.log("Message:", message)
+    console.log("Role:", role)
+    console.log("Has file:", !!fileData)
+    console.log("File type:", fileType)
+    console.log("File name:", fileName)
+    console.log("ConversationId:", conversationId)
+    console.log("ProfileId:", profileId)
 
-    if (!message || !conversationId || !profileId || !role) {
+    if ((!message && !fileData) || !conversationId || !profileId || !role) {
+      console.log("MISSING FIELDS - message:", !!message, "fileData:", !!fileData, "conversationId:", !!conversationId, "profileId:", !!profileId, "role:", !!role)
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -394,7 +442,7 @@ export async function POST(req: NextRequest) {
     const systemPrompt = userRole === "CANDIDATE" ? CANDIDATE_PROMPT : RECRUITER_PROMPT;
 
     // INTERCEPT: 'YES' / 'Interested' response
-    const normalizedMessage = message.trim().toLowerCase().replace(/[^\w\s]/gi, '');
+    const normalizedMessage = (message || "").trim().toLowerCase().replace(/[^\w\s]/gi, '');
     const isYes = ["yes", "interested", "yes i am", "i am interested", "yes please"].includes(normalizedMessage);
 
     if (isYes) {
@@ -430,7 +478,6 @@ export async function POST(req: NextRequest) {
       console.log("Found Match to Accept:", matchToAccept?.id);
 
       if (matchToAccept) {
-        // Update match status to ACCEPTED
         const { error: updateError } = await supabaseAdmin.from('matches').update({ status: 'ACCEPTED' }).eq('id', matchToAccept.id);
         if (updateError) console.error("Status Update Error:", updateError);
         
@@ -455,7 +502,6 @@ export async function POST(req: NextRequest) {
             `Feel free to reach out to them directly to coordinate an interview.`;
         }
 
-        // Add user message to convo, then our reply
         const { data: convo } = await supabaseAdmin.from('conversations').select('messages').eq('id', conversationId).single();
         const prevMsgs = Array.isArray(convo?.messages) ? convo.messages : [];
         const newMsgs = [
@@ -465,7 +511,6 @@ export async function POST(req: NextRequest) {
         ];
         await supabaseAdmin.from('conversations').update({ messages: newMsgs }).eq('id', conversationId);
 
-        // Stream back the reply immediately
         const encoder = new TextEncoder();
         const readableStream = new ReadableStream({
           start(controller) {
@@ -477,6 +522,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // ===== MAIN CHAT FLOW =====
+    console.log("Entering main chat flow...")
+
     const { data: convo, error: convoError } = await supabaseAdmin
       .from("conversations")
       .select("messages")
@@ -484,14 +532,15 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     if (convoError || !convo) {
+      console.log("Conversation not found:", conversationId, convoError)
       return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
     }
 
     const previousMessages = convo?.messages || [];
     
-    let dbContentText = message;
+    let dbContentText = message || "";
     if (fileName) {
-      dbContentText = `[Attached File: ${fileName}]\n\n${message}`;
+      dbContentText = `[Attached File: ${fileName}]\n\n${message || ""}`;
     }
 
     const updatedMessages = [...previousMessages, { role: "user", content: dbContentText, timestamp: new Date().toISOString() }];
@@ -501,64 +550,90 @@ export async function POST(req: NextRequest) {
       .update({ messages: updatedMessages })
       .eq("id", conversationId);
 
-    // Prepare Anthropic Messages
-    let extractedPdfText = null;
-    if (fileData && fileType === "application/pdf") {
-      try {
-        const base64Data = fileData.split(",")[1];
-        const buffer = Buffer.from(base64Data, "base64");
-        const pdfData = await pdf(buffer);
-        extractedPdfText = pdfData.text;
-        console.log("PDF Extracted text:", extractedPdfText.substring(0, 100));
-      } catch (e) {
-        console.error("PDF Parsing Error:", e);
+    console.log("Messages saved to DB, building Anthropic payload...")
+
+    // Build messages for Claude
+    const anthropicMessages: any[] = [];
+
+    // Add conversation history
+    for (const msg of updatedMessages) {
+      if (msg.role === 'user' || msg.role === 'assistant') {
+        anthropicMessages.push({
+          role: msg.role,
+          content: msg.content
+        });
       }
     }
 
-    const extractionPrompt = "This is a [resume/job description] file. Extract all information you can find: name, skills, experience, salary, work type, contact details, etc. Then continue the conversation to collect any missing information one question at a time.";
-
-    const anthropicMessages = updatedMessages.map((msg: any, i: number) => {
-      const isLast = i === updatedMessages.length - 1;
+    // Handle file if present
+    if (fileData && fileName) {
+      console.log("Processing file attachment...")
+      let fileContent = '';
       
-      if (isLast && fileData) {
-        if (fileType?.startsWith("image/")) {
-          const base64Data = fileData.split(",")[1];
+      try {
+        const rawBase64 = fileData.includes(',') ? fileData.split(',')[1] : fileData;
+
+        if (fileType?.includes('image')) {
+          console.log("Image file detected, using Claude vision...")
           let mediaType = fileType.split(";")[0] || "image/jpeg";
-          // Anthropic strict image types: image/jpeg, image/png, image/gif, image/webp
           if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(mediaType)) {
-             mediaType = "image/jpeg";
+            mediaType = "image/jpeg";
           }
-          
-          return {
-            role: "user",
+          // Replace the last user message with vision content
+          anthropicMessages[anthropicMessages.length - 1] = {
+            role: 'user',
             content: [
               {
-                type: "image",
-                source: { type: "base64", media_type: mediaType as any, data: base64Data }
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: mediaType,
+                  data: rawBase64
+                }
               },
               {
-                type: "text",
-                text: `${extractionPrompt}\n\nUser Message: ${message}`
+                type: 'text',
+                text: `This is a ${userRole === 'CANDIDATE' ? 'resume' : 'job description'} image. Extract all information and tell me what you found. Then ask for the first missing piece of information.\n\n${message || ''}`
               }
             ]
           };
-        } else if (fileType === "application/pdf" && extractedPdfText) {
-          return {
-            role: "user",
-            content: `I have uploaded a document (${fileName}). Here is its extracted text:\n\n${extractedPdfText}\n\n${extractionPrompt}\n\nUser Message: ${message}`
-          };
+        } else {
+          // Document file - extract text
+          const buffer = Buffer.from(rawBase64, 'base64');
+          
+          if (fileName.endsWith('.docx') || fileType?.includes('word') || fileType?.includes('docx')) {
+            console.log("DOCX file detected, extracting with mammoth...")
+            const mammoth = require('mammoth');
+            const result = await mammoth.extractRawText({ buffer });
+            fileContent = result.value;
+            console.log("DOCX TEXT EXTRACTED:", fileContent.slice(0, 200));
+          } else if (fileName.endsWith('.pdf') || fileType?.includes('pdf')) {
+            console.log("PDF file detected, extracting with pdf-parse...")
+            const pdfParse = require('pdf-parse');
+            const result = await pdfParse(buffer);
+            fileContent = result.text;
+            console.log("PDF TEXT EXTRACTED:", fileContent.slice(0, 200));
+          }
+          
+          if (fileContent) {
+            // Replace the last user message with file content
+            anthropicMessages[anthropicMessages.length - 1] = {
+              role: 'user',
+              content: `I have uploaded a file: ${fileName}\n\nContent:\n${fileContent}\n\nBased on this ${userRole === 'CANDIDATE' ? 'resume' : 'job description'}, extract all relevant information. Then in your response:\n1. Tell the user what information you found\n2. Ask for the first piece of MISSING information (only ONE question)\n\n${message || ''}`
+            };
+          }
         }
+      } catch (fileErr) {
+        console.error("File processing error:", fileErr);
+        // Fall through to normal message - already in anthropicMessages
       }
+    }
 
-      return {
-        role: msg.role === "assistant" ? "assistant" : "user",
-        content: msg.content,
-      };
-    });
+    console.log("Sending to Claude... messages count:", anthropicMessages.length)
 
     const stream = client.messages
       .stream({
-        model: "claude-3-5-sonnet-latest",
+        model: "claude-sonnet-4-20250514",
         max_tokens: 1024,
         system: systemPrompt,
         messages: anthropicMessages as Anthropic.MessageParam[],
@@ -578,17 +653,11 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          let finalExtractedText = aiText;
-          console.log("3. AI RESPONSE COLLECTED:", aiText.slice(0, 100));
-          console.log("4. PROFILE_DATA TAG FOUND:", aiText.includes('<PROFILE_DATA>'));
-          console.log("5. JOB_DATA TAG FOUND:", aiText.includes('<JOB_DATA>'));
+          console.log("AI RESPONSE COLLECTED:", aiText.slice(0, 100));
 
           // Check for JSON extraction
           const profileMatch = aiText.match(/<PROFILE_DATA>([\s\S]*?)<\/PROFILE_DATA>/);
           const jobMatch = aiText.match(/<JOB_DATA>([\s\S]*?)<\/JOB_DATA>/);
-
-          console.log("PROFILE MATCH FOUND:", !!profileMatch);
-          console.log("JOB MATCH FOUND:", !!jobMatch);
 
           if (profileMatch && userRole === "CANDIDATE") {
             try {
@@ -628,7 +697,6 @@ export async function POST(req: NextRequest) {
                 });
               }
 
-              // TRIGGER MATCHING
               console.log("PROFILE SAVED - running matching...");
               const { matches, notifications } = await processNewMatch(profileId, "CANDIDATE");
               console.log("MATCHES FOUND:", matches.length);
@@ -663,7 +731,6 @@ export async function POST(req: NextRequest) {
                 is_active: true
               });
 
-              // TRIGGER MATCHING
               console.log("JOB SAVED - running matching...");
               const { matches, notifications } = await processNewMatch(profileId, "RECRUITER");
               console.log("MATCHES FOUND:", matches.length);
@@ -673,7 +740,7 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          const finalMessages = [...updatedMessages, { role: "assistant", content: finalExtractedText, timestamp: new Date().toISOString() }];
+          const finalMessages = [...updatedMessages, { role: "assistant", content: aiText, timestamp: new Date().toISOString() }];
           await supabaseAdmin
             .from("conversations")
             .update({ messages: finalMessages })
