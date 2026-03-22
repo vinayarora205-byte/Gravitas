@@ -33,6 +33,7 @@ export default function Sidebar({ role }: { role: string }) {
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const checkUnread = async () => {

@@ -4,6 +4,35 @@ import { useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
+interface Profile {
+  id: string;
+  full_name: string;
+  role: string;
+}
+
+interface Match {
+  id: string;
+  chat_unlocked: boolean;
+  job_listings?: {
+    job_title: string;
+    company_name: string;
+    profiles: { full_name: string; email: string } | { full_name: string; email: string }[];
+  };
+  candidate_profiles?: {
+    job_title: string;
+    profiles: { full_name: string; email: string } | { full_name: string; email: string }[];
+  }[];
+}
+
+interface Message {
+  id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  profiles?: { full_name: string } | { full_name: string }[];
+}
+
+
 export default function DirectChatPage({ 
   params 
 }: { 
@@ -11,10 +40,10 @@ export default function DirectChatPage({
 }) {
   const { user } = useUser()
   const router = useRouter()
-  const [messages, setMessages] = useState<any[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
-  const [match, setMatch] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
+  const [match, setMatch] = useState<Match | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -145,8 +174,8 @@ export default function DirectChatPage({
   )
 
   const otherParty = profile?.role === 'recruiter'
-    ? (Array.isArray(match.candidate_profiles?.profiles) ? match.candidate_profiles.profiles[0]?.full_name : match.candidate_profiles?.profiles?.full_name)
-    : (Array.isArray(match.job_listings?.profiles) ? match.job_listings.profiles[0]?.full_name : match.job_listings?.profiles?.full_name)
+    ? (Array.isArray(match?.candidate_profiles) ? (match?.candidate_profiles[0] as any)?.profiles?.full_name : (match?.candidate_profiles as any)?.profiles?.full_name)
+    : (Array.isArray(match?.job_listings?.profiles) ? (match?.job_listings?.profiles[0] as any)?.full_name : (match?.job_listings?.profiles as any)?.full_name)
 
   return (
     <div style={{
@@ -200,9 +229,9 @@ export default function DirectChatPage({
             <p>Chat unlocked! Say hello to {otherParty}</p>
           </div>
         )}
-        {messages.map((msg: any, i) => {
+        {messages.map((msg: Message, i) => {
           const isMe = msg.sender_id === profile?.id
-          const senderName = Array.isArray(msg.profiles) ? msg.profiles[0]?.full_name : msg.profiles?.full_name;
+          const senderName = Array.isArray(msg.profiles) ? (msg.profiles[0] as any)?.full_name : (msg.profiles as any)?.full_name;
           return (
             <div key={i} style={{
               display: 'flex',

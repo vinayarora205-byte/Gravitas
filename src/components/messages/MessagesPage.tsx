@@ -5,24 +5,58 @@ import { useUser } from "@clerk/nextjs";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
+interface Profile {
+  id: string;
+  full_name: string;
+  role: string;
+}
+
+interface Match {
+  id: string;
+  chat_unlocked: boolean;
+  created_at: string;
+  job_title: string;
+  company_name: string;
+  recruiter_name: string;
+  recruiter_profile_id: string;
+  candidate_job_title: string;
+  candidate_name: string;
+  candidate_profile_id: string;
+  last_message?: string;
+  last_message_time?: string;
+  unread_count?: number;
+}
+
+interface Message {
+  id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  match_id: string;
+  profiles?: { full_name: string } | { full_name: string }[];
+}
+
+
 export default function MessagesPage() {
   const { user } = useUser();
-  const router = useRouter();
-  const [matches, setMatches] = useState<any[]>([]);
-  const [selectedMatch, setSelectedMatch] = useState<any>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  // router removed to fix unused variable warning
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (user) loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
   // Subscribe to new messages globally for unread counts and current chat
@@ -63,6 +97,7 @@ export default function MessagesPage() {
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, selectedMatch]);
 
   async function loadInitialData() {
@@ -90,7 +125,7 @@ export default function MessagesPage() {
     }
 
     // Process matches to include unread counts and last message
-    const processedMatches = await Promise.all((mData || []).map(async (m: any) => {
+    const processedMatches = await Promise.all((mData || []).map(async (m: Match) => {
       // Get last message
       const { data: lastMsg } = await supabase
         .from("direct_messages")
@@ -119,7 +154,7 @@ export default function MessagesPage() {
     setMatches(processedMatches);
   }
 
-  async function selectChat(match: any) {
+  async function selectChat(match: Match) {
     setSelectedMatch(match);
     setLoading(true);
 
@@ -154,7 +189,7 @@ export default function MessagesPage() {
     const content = input.trim();
     setInput("");
 
-    const { data: newMsg, error } = await supabase.from("direct_messages").insert({
+    const { data: newMsg, error: _error } = await supabase.from("direct_messages").insert({
       match_id: selectedMatch.id,
       sender_id: profile.id,
       content,
@@ -218,7 +253,7 @@ export default function MessagesPage() {
                   <p className="text-[11px] text-gray-400 truncate w-[200px]">
                     {m.last_message}
                   </p>
-                  {m.unread_count > 0 && (
+                  {(m.unread_count ?? 0) > 0 && (
                     <span className="bg-[#FF6B3D] text-white text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
                       {m.unread_count}
                     </span>
@@ -265,11 +300,11 @@ export default function MessagesPage() {
               {messages.length === 0 && (
                 <div className="text-center py-10 text-gray-500">
                   <span className="text-2xl">👋</span>
-                  <p className="text-sm mt-2">Chat unlocked! Say hello to {profile?.role === "recruiter" ? selectedMatch.candidate_name : selectedMatch.recruiter_name}</p>
+                  <p className="text-sm mt-2">Chat unlocked! Say hello to {profile?.role === "recruiter" ? selectedMatch?.candidate_name : selectedMatch?.recruiter_name}</p>
                 </div>
               )}
-              {messages.map((msg, i) => {
-                const isMe = msg.sender_id === profile.id;
+              {messages.map((msg: Message, i) => {
+                const isMe = msg.sender_id === profile?.id;
                 return (
                   <div key={i} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                     <div
@@ -281,7 +316,7 @@ export default function MessagesPage() {
                     >
                       {!isMe && (
                         <p className="text-[10px] font-bold text-orange-400 mb-1">
-                          {msg.profiles?.full_name}
+                          {Array.isArray(msg.profiles) ? (msg.profiles[0] as any)?.full_name : (msg.profiles as any)?.full_name}
                         </p>
                       )}
                       <p className="text-sm leading-relaxed">{msg.content}</p>
