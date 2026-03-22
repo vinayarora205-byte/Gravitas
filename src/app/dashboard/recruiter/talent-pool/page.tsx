@@ -279,8 +279,31 @@ export default function TalentPoolPage() {
                         </Button>
                       )}
 
-                      {/* Pending — Accept/Decline */}
-                      {!isRecruiterAccepted && !isRejected && !chatUnlocked && (
+                      {/* Candidate already accepted, recruiter hasn't */}
+                      {!isRecruiterAccepted && isCandidateAccepted && !isRejected && !chatUnlocked && (
+                        <div className="flex flex-col items-end gap-2">
+                           <span className="text-[10px] text-orange-500 font-medium animate-pulse">
+                            ⏳ Candidate accepted! Spend 2 Hiries to connect
+                          </span>
+                          <div className="flex gap-1">
+                            {balance >= 2 ? (
+                              <Button variant="primary" size="sm" onClick={() => handleAcceptMatch(c.id)} disabled={actionLoading === c.id}>
+                                {actionLoading === c.id ? "..." : "Accept (2 Hiries)"}
+                              </Button>
+                            ) : (
+                              <Button variant="primary" size="sm" onClick={() => router.push("/pricing")}>
+                                Get 💎
+                              </Button>
+                            )}
+                            <Button variant="secondary" size="sm" onClick={() => handleDeclineMatch(c.id)} disabled={actionLoading === c.id}>
+                              ✕
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Both pending or only candidate accepted (above handled) */}
+                      {!isRecruiterAccepted && !isCandidateAccepted && !isRejected && !chatUnlocked && (
                         <div className="flex gap-1">
                           {balance >= 2 ? (
                             <Button variant="primary" size="sm" onClick={() => handleAcceptMatch(c.id)} disabled={actionLoading === c.id}>
@@ -297,7 +320,7 @@ export default function TalentPoolPage() {
                         </div>
                       )}
 
-                      {/* Waiting */}
+                      {/* Waiting for candidate */}
                       {isRecruiterAccepted && !isCandidateAccepted && !isRejected && !chatUnlocked && (
                         <span className="text-xs text-muted">⏳ Waiting for candidate...</span>
                       )}

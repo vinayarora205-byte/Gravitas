@@ -18,8 +18,10 @@ export default function DirectChatPage() {
   const [myProfileId, setMyProfileId] = useState("");
   const [otherName, setOtherName] = useState("Chat Partner");
   const [loading, setLoading] = useState(true);
+  const [chatLocked, setChatLocked] = useState(false);
   const [showHireBanner, setShowHireBanner] = useState(false);
   const [hireSubmitted, setHireSubmitted] = useState(false);
+  const [myRole, setMyRole] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,15 +59,36 @@ export default function DirectChatPage() {
 
     if (!profile) return;
     setMyProfileId(profile.id);
+    setMyRole(profile.role?.toUpperCase() || "");
 
     const { data: m } = await supabase
       .from("matches")
-      .select("*, job_listings(profile_id, job_title, company_name, profiles(full_name)), candidate_profiles:candidate_id(profile_id, job_title, profiles(full_name))")
-      .eq("id", matchId)
+      .select(`
+        *, 
+        job_listings(
+          profile_id, 
+          job_title, 
+          company_name, 
+          profiles(full_name)
+        ), 
+        candidate_profiles:candidate_id(
+          profile_id, 
+          job_title, 
+          profiles(full_name)
+        )
+      `)
+      .eq("id", match_id)
       .maybeSingle();
 
-    if (!m || !m.chat_unlocked) {
-      router.push(profile.role === "RECRUITER" ? "/dashboard/recruiter/talent-pool" : "/dashboard/candidate/opportunities");
+    if (!m) {
+      setLoading(false);
+      return;
+    }
+
+    if (!m.chat_unlocked) {
+      setChatLocked(true);
+      setMatch(m);
+      setLoading(false);
       return;
     }
 
@@ -90,7 +113,7 @@ export default function DirectChatPage() {
     const { data: msgs } = await supabase
       .from("direct_messages")
       .select("*, profiles:sender_id(full_name)")
-      .eq("match_id", matchId)
+      .eq("match_id", match_id)
       .order("created_at", { ascending: true });
 
     setMessages(msgs || []);
@@ -122,6 +145,28 @@ export default function DirectChatPage() {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#1A1A1A", color: "#fff" }}>
         <p>Loading chat...</p>
+      </div>
+    );
+  }
+
+  if (chatLocked) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#1A1A1A", color: "#E0E0E0", fontFamily: "'Inter', sans-serif", justifyContent: "center", alignItems: "center", padding: "40px", textAlign: "center" }}>
+        <p style={{ fontSize: "64px", margin: "0 0 24px" }}>🔒</p>
+        <h1 style={{ fontSize: "24px", fontWeight: "700", margin: "0 0 16px", color: "#fff" }}>Chat Not Unlocked Yet</h1>
+        <p style={{ fontSize: "16px", color: "#888", maxWidth: "400px", lineHeight: "1.6", margin: "0 0 32px" }}>
+          Both parties must accept the match to unlock direct messaging. 
+          {myRole === "RECRUITER" 
+            ? (match?.recruiter_accepted ? " You've accepted. Waiting for the candidate..." : " You haven't accepted this match yet.") 
+            : (match?.candidate_accepted ? " You've accepted. Waiting for the recruiter..." : " You haven't accepted this match yet.")
+          }
+        </p>
+        <button 
+          onClick={() => router.back()}
+          style={{ padding: "12px 24px", borderRadius: "12px", border: "1px solid #333", background: "#222", color: "#E0E0E0", fontWeight: "600", cursor: "pointer" }}
+        >
+          Go Back
+        </button>
       </div>
     );
   }
@@ -189,7 +234,7 @@ export default function DirectChatPage() {
                 background: isMine ? "linear-gradient(135deg, #FF6B3D, #FF8F6B)" : "#2A2A2A",
                 color: isMine ? "#fff" : "#E0E0E0",
               }}>
-                {!isMine && <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#FF6B3D", fontWeight: "600" }}>{msg.profiles?.full_name || "User"}</p>}
+                {!isMine && <p style={{ margin: "0 0 4px", fontSize: "11px", color: "#FF6B3D", fontWeight: "600" }}>{(Array.isArray(msg.profiles) ? msg.profiles[0]?.full_name : msg.profiles?.full_name) || "User"}</p>}
                 <p style={{ margin: 0, fontSize: "14px", lineHeight: "1.5" }}>{msg.content}</p>
                 <p style={{ margin: "4px 0 0", fontSize: "10px", color: isMine ? "#fff9" : "#666", textAlign: "right" }}>
                   {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

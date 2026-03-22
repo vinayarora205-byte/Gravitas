@@ -247,9 +247,32 @@ export default function OpportunitiesPage() {
                           </Button>
                         )}
 
-                        {/* Pending — Accept/Decline */}
-                        {!isCandidateAccepted && !isRejected && !chatUnlocked && (
-                          <>
+                        {/* Recruiter already accepted, candidate hasn't */}
+                        {!isCandidateAccepted && isRecruiterAccepted && !isRejected && !chatUnlocked && (
+                          <div className="flex flex-col items-end gap-2">
+                             <span className="text-xs text-orange-500 font-medium animate-pulse">
+                              ⏳ Recruiter accepted! Spend 2 Hiries to connect
+                            </span>
+                            {balance >= 2 ? (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleAcceptMatch(match.id)}
+                                disabled={actionLoading === match.id}
+                              >
+                                {actionLoading === match.id ? "..." : "Accept (2 Hiries)"}
+                              </Button>
+                            ) : (
+                              <Button variant="primary" size="sm" onClick={() => router.push("/pricing")} >
+                                Get Hiries 💎
+                              </Button>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Both pending or only recruiter accepted (above handled) */}
+                        {!isCandidateAccepted && !isRecruiterAccepted && !isRejected && !chatUnlocked && (
+                           <div className="flex gap-2">
                             {balance >= 2 ? (
                               <Button
                                 variant="primary"
@@ -272,10 +295,10 @@ export default function OpportunitiesPage() {
                             >
                               Decline
                             </Button>
-                          </>
+                          </div>
                         )}
 
-                        {/* Waiting */}
+                        {/* Waiting for recruiter */}
                         {isCandidateAccepted && !isRecruiterAccepted && !isRejected && !chatUnlocked && (
                           <span className="text-sm text-muted py-2">⏳ Waiting for recruiter to accept...</span>
                         )}
