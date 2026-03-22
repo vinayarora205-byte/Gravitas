@@ -54,7 +54,8 @@ export default function Sidebar({ role }: { role: string }) {
   };
 
   const getLinks = () => {
-    if (role === 'RECRUITER') {
+    const r = role?.toUpperCase();
+    if (r === 'RECRUITER') {
       return [
         { label: "Dashboard", href: "/dashboard/recruiter", icon: LayoutDashboard },
         { label: "GAIA Chat", href: "/chat", icon: MessageSquare },
