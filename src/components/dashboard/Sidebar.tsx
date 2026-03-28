@@ -59,14 +59,14 @@ export default function Sidebar({ role }: { role: string }) {
     if (r === 'RECRUITER') {
       return [
         { label: "Dashboard", href: "/dashboard/recruiter", icon: LayoutDashboard },
-        { label: "GAIA Chat", href: "/chat", icon: MessageSquare },
+        { label: "Claura Chat", href: "/chat", icon: MessageSquare },
         { label: "Talent Pool", href: "/dashboard/recruiter/talent-pool", icon: UserCheck },
         { label: "Messages", href: "/dashboard/recruiter/messages", icon: Mail, badge: hasUnread },
       ];
     }
     return [
       { label: "Dashboard", href: "/dashboard/candidate", icon: LayoutDashboard },
-      { label: "GAIA Chat", href: "/chat", icon: MessageSquare },
+      { label: "Claura Chat", href: "/chat", icon: MessageSquare },
       { label: "Opportunities", href: "/dashboard/candidate/opportunities", icon: Briefcase },
       { label: "Messages", href: "/dashboard/candidate/messages", icon: Mail, badge: hasUnread },
     ];
@@ -107,10 +107,10 @@ export default function Sidebar({ role }: { role: string }) {
       <div className="p-6 border-t border-border bg-black/5 dark:bg-white/5 mt-auto">
          <div className="flex items-center gap-3">
            <div className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center font-bold text-sm">
-             G
+             C
            </div>
            <div>
-             <div className="text-sm font-medium text-foreground">GAIA Agent</div>
+             <div className="text-sm font-medium text-foreground">Claura Agent</div>
              <div className="text-xs text-success flex items-center gap-1">
                <span className="w-1.5 h-1.5 rounded-full bg-success"></span> Online
              </div>

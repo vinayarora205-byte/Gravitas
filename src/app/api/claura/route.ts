@@ -17,7 +17,7 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const CANDIDATE_PROMPT = `You are GAIA, an AI talent agent for GRAVITAS. You are talking to a job seeker. Ask exactly ONE question at a time. Never ask two questions together. Wait for their answer before asking the next question.
+const CANDIDATE_PROMPT = `You are Claura, an AI talent agent for Clauhire. You are talking to a job seeker. Ask exactly ONE question at a time. Never ask two questions together. Wait for their answer before asking the next question.
 
 Collect in this order, one by one:
 1. What kind of job they are looking for
@@ -47,7 +47,7 @@ Rules:
   "whatsapp_number": "...", "linkedin_url": "...", "portfolio_url": "..."
 }`;
 
-const RECRUITER_PROMPT = `You are GAIA, an AI talent agent for GRAVITAS. You are talking to a recruiter or hiring manager. Ask exactly ONE question at a time. Never ask two questions together. Wait for their answer before asking the next question.
+const RECRUITER_PROMPT = `You are Claura, an AI talent agent for Clauhire. You are talking to a recruiter or hiring manager. Ask exactly ONE question at a time. Never ask two questions together. Wait for their answer before asking the next question.
 
 Collect in this order, one by one:
 1. Job title they are hiring for
@@ -219,7 +219,7 @@ export async function processNewMatch(
       // Add to candidate chat
       await appendToChat(
         candidate.profiles.clerk_user_id,
-        `⚡ GAIA found a job match for you!\n\n` +
+        `⚡ Claura found a job match for you!\n\n` +
         `Company: ${job.company_name || 'Confidential'}\n` +
         `Role: ${job.job_title || 'Not specified'}\n` +
         `Salary: ₹${job.salary_min || '0'}-${job.salary_max || '0'}/month\n` +
@@ -231,7 +231,7 @@ export async function processNewMatch(
       // Add to recruiter chat
       await appendToChat(
         job.profiles.clerk_user_id,
-        `⚡ GAIA found a matching candidate!\n\n` +
+        `⚡ Claura found a matching candidate!\n\n` +
         `Name: ${candidate.profiles?.full_name || 'Anonymous'}\n` +
         `Role: ${candidate.job_title || 'Not specified'}\n` +
         `Expected: ₹${candidate.salary_min || '0'}-${candidate.salary_max || '0'}/month\n` +
@@ -242,14 +242,14 @@ export async function processNewMatch(
 
       await sendMatchEmail(
         candidate.profiles.email,
-        "⚡ GRAVITAS: New Job Match - " + job.job_title,
+        "⚡ Clauhire: New Job Match - " + job.job_title,
         "<h2>New Job Match Found!</h2>" +
         "<p><strong>Company:</strong> " + (job.company_name || "Confidential") + "</p>" +
         "<p><strong>Role:</strong> " + job.job_title + "</p>" +
         "<p><strong>Salary:</strong> ₹" + (job.salary_min || 0) + 
         "-" + (job.salary_max || 0) + "/month</p>" +
         "<p><strong>Match Score:</strong> " + score + "%</p>" +
-        "<p>Login to GRAVITAS to accept this match.</p>" +
+        "<p>Login to Clauhire to accept this match.</p>" +
         "<a href='https://gravitas-dusky.vercel.app/chat' " +
         "style='background:#FF6B3D;color:white;padding:12px 24px;" +
         "border-radius:8px;text-decoration:none;display:inline-block;" +
@@ -258,14 +258,14 @@ export async function processNewMatch(
 
       await sendMatchEmail(
         job.profiles.email,
-        "⚡ GRAVITAS: New Candidate - " + (candidate.profiles?.full_name || "Anonymous"),
+        "⚡ Clauhire: New Candidate - " + (candidate.profiles?.full_name || "Anonymous"),
         "<h2>New Candidate Match!</h2>" +
         "<p><strong>Name:</strong> " + (candidate.profiles?.full_name || "Anonymous") + "</p>" +
         "<p><strong>Role:</strong> " + candidate.job_title + "</p>" +
         "<p><strong>Expected:</strong> ₹" + (candidate.salary_min || 0) + 
         "-" + (candidate.salary_max || 0) + "/month</p>" +
         "<p><strong>Match Score:</strong> " + score + "%</p>" +
-        "<p>Login to GRAVITAS to connect with this candidate.</p>" +
+        "<p>Login to Clauhire to connect with this candidate.</p>" +
         "<a href='https://gravitas-dusky.vercel.app/chat' " +
         "style='background:#FF6B3D;color:white;padding:12px 24px;" +
         "border-radius:8px;text-decoration:none;display:inline-block;" +
@@ -323,7 +323,7 @@ export async function processNewMatch(
       
       await appendToChat(
         candidate.profiles.clerk_user_id,
-        `⚡ GAIA found a job match for you!\n\n` +
+        `⚡ Claura found a job match for you!\n\n` +
         `Company: ${job.company_name || 'Confidential'}\n` +
         `Role: ${job.job_title || 'Not specified'}\n` +
         `Salary: ₹${job.salary_min || '0'}-${job.salary_max || '0'}/month\n` +
@@ -334,7 +334,7 @@ export async function processNewMatch(
       
       await appendToChat(
         job.profiles.clerk_user_id,
-        `⚡ GAIA found a matching candidate!\n\n` +
+        `⚡ Claura found a matching candidate!\n\n` +
         `Name: ${candidate.profiles?.full_name || 'Anonymous'}\n` +
         `Role: ${candidate.job_title || 'Not specified'}\n` +
         `Expected: ₹${candidate.salary_min || '0'}-${candidate.salary_max || '0'}/month\n` +
@@ -345,14 +345,14 @@ export async function processNewMatch(
 
       await sendMatchEmail(
         candidate.profiles.email,
-        "⚡ GRAVITAS: New Job Match - " + job.job_title,
+        "⚡ Clauhire: New Job Match - " + job.job_title,
         "<h2>New Job Match Found!</h2>" +
         "<p><strong>Company:</strong> " + (job.company_name || "Confidential") + "</p>" +
         "<p><strong>Role:</strong> " + job.job_title + "</p>" +
         "<p><strong>Salary:</strong> ₹" + (job.salary_min || 0) + 
         "-" + (job.salary_max || 0) + "/month</p>" +
         "<p><strong>Match Score:</strong> " + score + "%</p>" +
-        "<p>Login to GRAVITAS to accept this match.</p>" +
+        "<p>Login to Clauhire to accept this match.</p>" +
         "<a href='https://gravitas-dusky.vercel.app/chat' " +
         "style='background:#FF6B3D;color:white;padding:12px 24px;" +
         "border-radius:8px;text-decoration:none;display:inline-block;" +
@@ -361,14 +361,14 @@ export async function processNewMatch(
 
       await sendMatchEmail(
         job.profiles.email,
-        "⚡ GRAVITAS: New Candidate - " + (candidate.profiles?.full_name || "Anonymous"),
+        "⚡ Clauhire: New Candidate - " + (candidate.profiles?.full_name || "Anonymous"),
         "<h2>New Candidate Match!</h2>" +
         "<p><strong>Name:</strong> " + (candidate.profiles?.full_name || "Anonymous") + "</p>" +
         "<p><strong>Role:</strong> " + candidate.job_title + "</p>" +
         "<p><strong>Expected:</strong> ₹" + (candidate.salary_min || 0) + 
         "-" + (candidate.salary_max || 0) + "/month</p>" +
         "<p><strong>Match Score:</strong> " + score + "%</p>" +
-        "<p>Login to GRAVITAS to connect with this candidate.</p>" +
+        "<p>Login to Clauhire to connect with this candidate.</p>" +
         "<a href='https://gravitas-dusky.vercel.app/chat' " +
         "style='background:#FF6B3D;color:white;padding:12px 24px;" +
         "border-radius:8px;text-decoration:none;display:inline-block;" +
@@ -421,7 +421,7 @@ async function extractTextFromFile(
 
 export async function POST(req: NextRequest) {
   try {
-    console.log("=== GAIA API CALLED ===")
+    console.log("=== Claura API CALLED ===")
     
     const body = await req.json();
     const { message, conversationId, profileId, role, fileData, fileName, fileType } = body;
@@ -760,7 +760,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error("GAIA API Error:", error);
+    console.error("Claura API Error:", error);
     return NextResponse.json({ error: "Failed to process message" }, { status: 500 });
   }
 }

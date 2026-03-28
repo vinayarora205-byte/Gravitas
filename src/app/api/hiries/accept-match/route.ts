@@ -10,7 +10,7 @@ const supabaseAdmin = createSupabaseAdmin(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Helper: append a GAIA message to user's most recent conversation
+// Helper: append a Claura message to user's most recent conversation
 async function appendToChat(clerkUserId: string, message: string) {
   try {
     // Get profile ID from clerk_user_id
@@ -178,7 +178,7 @@ export async function POST(req: Request) {
       });
       console.log("NOTIFICATION SENT to candidate:", candidateProfileId);
 
-      // Append to candidate's GAIA chat
+      // Append to candidate's Claura chat
       if (candidateProfile?.clerk_user_id) {
         await appendToChat(
           candidateProfile.clerk_user_id,
@@ -205,7 +205,7 @@ export async function POST(req: Request) {
       });
       console.log("NOTIFICATION SENT to recruiter:", recruiterProfileId);
 
-      // Append to recruiter's GAIA chat
+      // Append to recruiter's Claura chat
       if (recruiterProfile?.clerk_user_id) {
         await appendToChat(
           recruiterProfile.clerk_user_id,
@@ -265,7 +265,7 @@ export async function POST(req: Request) {
         console.log("CHAT UNLOCKED notifications sent to both parties");
       }
 
-      // Append to both GAIA chats
+      // Append to both Claura chats
       if (recruiterProfile?.clerk_user_id) {
         await appendToChat(
           recruiterProfile.clerk_user_id,

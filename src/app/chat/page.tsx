@@ -50,7 +50,7 @@ export default function ChatIndexPage() {
     <div className="flex h-screen w-full items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4">
         <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-        <p className="text-muted text-sm font-medium">Initializing GAIA...</p>
+        <p className="text-muted text-sm font-medium">Initializing Claura...</p>
       </div>
     </div>
   );

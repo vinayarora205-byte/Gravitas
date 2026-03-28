@@ -86,7 +86,7 @@ export default function RoleSelectPage() {
           Identify yourself.
         </h1>
         <p className="text-muted">
-          Select your objective to configure your GRAVITAS command center.
+          Select your objective to configure your Clauhire command center.
         </p>
       </div>
 
@@ -96,7 +96,7 @@ export default function RoleSelectPage() {
             <div className="text-4xl text-accent mb-6 group-hover:scale-110 transition-transform">◉</div>
             <h2 className="text-2xl font-bold text-foreground mb-2">Recruiter</h2>
             <p className="text-muted">
-              I want to post jobs, manage candidate pipelines, and use GAIA to source top talent.
+              I want to post jobs, manage candidate pipelines, and use Claura to source top talent.
             </p>
           </Card>
         </button>

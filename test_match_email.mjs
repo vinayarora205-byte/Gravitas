@@ -32,7 +32,7 @@ const payload2 = {
 
 async function testMatch() {
   try {
-    const response = await fetch("http://localhost:3005/api/gaia", {
+    const response = await fetch("http://localhost:3005/api/claura", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload2)

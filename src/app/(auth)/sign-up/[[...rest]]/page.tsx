@@ -20,7 +20,7 @@ export default function SignUpPage() {
       }}>
         <div style={{flex:1}}>
           <h1 style={{fontSize:"32px",fontWeight:"600",color:"#1F1F1F",marginBottom:"12px"}}>
-            Join GRAVITAS
+            Join Clauhire
           </h1>
           <p style={{color:"#666",marginBottom:"24px"}}>
             AI-powered recruitment. Zero friction.

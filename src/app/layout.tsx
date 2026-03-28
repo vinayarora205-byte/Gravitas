@@ -11,7 +11,7 @@ const inter = Inter({
 
 
 export const metadata: Metadata = {
-  title: "GRAVITAS | The Recruitment Operating System",
+  title: "Clauhire | The Recruitment Operating System",
   description: "Advanced AI-powered talent acquisition platform.",
 };
 

@@ -6,7 +6,7 @@ const FEATURES = [
     icon: "⚡",
     title: "AI Candidate Matching",
     description:
-      "GAIA analyzes job requirements and surfaces the right candidates instantly. No more manual screening.",
+      "Claura analyzes job requirements and surfaces the right candidates instantly. No more manual screening.",
   },
   {
     icon: "◉",

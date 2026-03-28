@@ -182,7 +182,7 @@ export default function TalentPoolPage() {
 
       {candidates.length === 0 ? (
         <Card className="p-12 text-center text-muted">
-          No candidates found yet. Post a job via GAIA to start receiving matched candidates.
+          No candidates found yet. Post a job via Claura to start receiving matched candidates.
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

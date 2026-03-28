@@ -6,10 +6,10 @@ async function testUpload() {
   const base64 = fileBuffer.toString('base64');
   const fileData = `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${base64}`;
 
-  console.log("Sending request to /api/gaia...");
+  console.log("Sending request to /api/claura...");
 
   try {
-    const res = await fetch("http://localhost:3005/api/gaia", {
+    const res = await fetch("http://localhost:3005/api/claura", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

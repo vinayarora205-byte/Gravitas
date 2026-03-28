@@ -51,7 +51,7 @@ export default function Header({ role }: { role?: string }) {
     <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6 shrink-0 relative z-50">
       <div className="flex items-center gap-3">
         <Link href="/" className="font-bold text-xl tracking-tight text-foreground flex items-center gap-2">
-          GRAVITAS
+          Clauhire
         </Link>
         {role && (
           <span className="hidden sm:inline-flex px-2.5 py-1 bg-black/5 dark:bg-white/5 text-muted text-xs font-medium rounded-full ml-4">

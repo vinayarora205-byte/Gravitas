@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { processNewMatch } from "../gaia/route";
+import { processNewMatch } from "../claura/route";
 
 export const dynamic = "force-dynamic";
 

@@ -2,7 +2,7 @@ import React from "react";
 import Logo from "@/components/ui/Logo";
 
 const LINKS = {
-  Product: ["Features", "Pricing", "GAIA AI", "Changelog"],
+  Product: ["Features", "Pricing", "Claura AI", "Changelog"],
   Company: ["About", "Blog", "Careers", "Press"],
   Legal: ["Privacy", "Terms", "Security"],
 };
@@ -42,7 +42,7 @@ export default function Footer() {
 
         <div className="border-t border-void-border mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <span className="text-xs text-ghost-dim">
-            © 2026 GRAVITAS. All rights reserved.
+            © 2026 Clauhire. All rights reserved.
           </span>
           <div className="flex items-center gap-6">
             <span className="text-xs text-ghost-dim">

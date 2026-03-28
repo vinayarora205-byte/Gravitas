@@ -18,7 +18,7 @@ export default function LandingPage() {
       <CTA />
       
       <footer className="max-w-7xl mx-auto px-6 py-12 border-t border-border flex flex-col md:flex-row items-center justify-between text-sm text-muted">
-        <p>© 2026 GRAVITAS • Intelligent Recruitment</p>
+        <p>© 2026 Clauhire • Intelligent Recruitment</p>
         <div className="flex gap-8 mt-4 md:mt-0">
           <a href="#" className="hover:text-foreground transition-colors">Terms</a>
           <a href="#" className="hover:text-foreground transition-colors">Privacy</a>

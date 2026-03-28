@@ -118,8 +118,8 @@ export default function ChatPage({ params }: { params: { id: string } }) {
           setMessages([{
             role: "assistant",
             content: normalizedRole === "RECRUITER"
-              ? "Hi! I'm GAIA, your AI hiring agent. What role are you looking to fill today?"
-              : "Hi! I'm GAIA, your AI talent agent. What kind of role are you looking for?"
+              ? "Hi! I'm Claura, your AI hiring agent. What role are you looking to fill today?"
+              : "Hi! I'm Claura, your AI talent agent. What kind of role are you looking for?"
           }]);
         } else {
           setMessages(cleanHistory);
@@ -129,8 +129,8 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         setMessages([{
           role: "assistant",
           content: normalizedRole === "RECRUITER"
-            ? "Hi! I'm GAIA, your AI hiring agent. What role are you looking to fill today?"
-            : "Hi! I'm GAIA, your AI talent agent. What kind of role are you looking for?"
+            ? "Hi! I'm Claura, your AI hiring agent. What role are you looking to fill today?"
+            : "Hi! I'm Claura, your AI talent agent. What kind of role are you looking for?"
         }]);
       }
     }
@@ -203,7 +203,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/gaia", {
+      const res = await fetch("/api/claura", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -385,7 +385,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
           color: "#1F1F1F",
           flexShrink: 0
         }}>
-          GAIA
+          Claura
         </div>
 
         {/* Messages Area */}
@@ -417,7 +417,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                     fontSize: "14px",
                     fontWeight: "600",
                     flexShrink: 0
-                  }}>G</div>
+                  }}>C</div>
                 )}
                 <div style={{
                   maxWidth: "70%",
@@ -497,7 +497,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                   color: "#999",
                   fontSize: "14px"
                 }}>
-                  GAIA is thinking...
+                  Claura is thinking...
                 </div>
               </div>
             )}
@@ -573,7 +573,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                   handleSend();
                 }
               }}
-              placeholder="Message GAIA..."
+              placeholder="Message Claura..."
               disabled={loading}
               style={{
                 flex: 1,

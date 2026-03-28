@@ -145,7 +145,7 @@ export default function OpportunitiesPage() {
       <div className="mb-10 flex justify-between items-start flex-wrap gap-4">
         <div>
           <h1 className="text-h2 font-semibold text-foreground mb-2">My Opportunities</h1>
-          <p className="text-muted text-body-lg">Exclusive matches hand-picked by GAIA for your profile.</p>
+          <p className="text-muted text-body-lg">Exclusive matches hand-picked by Claura for your profile.</p>
         </div>
         <div className="flex items-center gap-3">
           <span className="px-4 py-2 rounded-xl bg-accent/10 text-accent font-bold text-sm border border-accent/20">
@@ -162,7 +162,7 @@ export default function OpportunitiesPage() {
 
       {matches.length === 0 ? (
         <Card className="p-12 text-center text-muted">
-          No matches found yet. Complete your profile with GAIA to unlock opportunities.
+          No matches found yet. Complete your profile with Claura to unlock opportunities.
         </Card>
       ) : (
         <div className="space-y-6">

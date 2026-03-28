@@ -105,7 +105,7 @@ export async function GET() {
                   ...(candConvo.messages || []),
                   {
                     role: "assistant",
-                    content: `⚡ Great news! GAIA found a job match for you!\n\nCompany: ${job.company_name || 'Confidential'}\nRole: ${job.job_title}\nSalary: ₹${job.salary_min || '?'}-${job.salary_max || '?'}/month\nWork Type: ${job.work_type || 'Not specified'}\nMatch Score: ${score}%\n\nThe recruiter has been notified. Are you interested?`,
+                    content: `⚡ Great news! Claura found a job match for you!\n\nCompany: ${job.company_name || 'Confidential'}\nRole: ${job.job_title}\nSalary: ₹${job.salary_min || '?'}-${job.salary_max || '?'}/month\nWork Type: ${job.work_type || 'Not specified'}\nMatch Score: ${score}%\n\nThe recruiter has been notified. Are you interested?`,
                     timestamp: new Date().toISOString(),
                     type: "match_notification"
                   }
@@ -132,7 +132,7 @@ export async function GET() {
                   ...(recConvo.messages || []),
                   {
                     role: "assistant",
-                    content: `⚡ GAIA found a matching candidate!\n\nName: ${candidate.profiles?.full_name || 'Anonymous'}\nRole: ${candidate.job_title}\nSkills: ${(candidate.skills || []).join(', ')}\nExpected: ₹${candidate.salary_min || '?'}-${candidate.salary_max || '?'}/month\nExperience: ${expYears} years\nMatch Score: ${score}%\n\nWould you like to connect with this candidate?`,
+                    content: `⚡ Claura found a matching candidate!\n\nName: ${candidate.profiles?.full_name || 'Anonymous'}\nRole: ${candidate.job_title}\nSkills: ${(candidate.skills || []).join(', ')}\nExpected: ₹${candidate.salary_min || '?'}-${candidate.salary_max || '?'}/month\nExperience: ${expYears} years\nMatch Score: ${score}%\n\nWould you like to connect with this candidate?`,
                     timestamp: new Date().toISOString(),
                     type: "match_notification"
                   }

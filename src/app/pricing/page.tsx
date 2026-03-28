@@ -17,7 +17,7 @@ export default function PricingPage() {
       {/* Header */}
       <div style={{ padding: "24px 32px", borderBottom: "1px solid #2A2A2A", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 style={{ margin: 0, fontSize: "24px", fontWeight: "700" }}>
-          <span style={{ color: "#FF6B3D" }}>GRAVITAS</span>
+          <span style={{ color: "#FF6B3D" }}>Clauhire</span>
         </h1>
         <button onClick={() => router.back()} style={{ padding: "8px 20px", borderRadius: "8px", border: "1px solid #333", background: "transparent", color: "#E0E0E0", cursor: "pointer", fontSize: "14px" }}>
           ← Back

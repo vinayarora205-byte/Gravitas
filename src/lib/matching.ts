@@ -3,7 +3,7 @@
 import { supabase } from "./supabase";
 
 /**
- * Real Matching System for GRAVITAS.
+ * Real Matching System for Clauhire.
  * Implements the specific scoring rules for title, skills, salary, and work type.
  */
 
@@ -149,12 +149,12 @@ async function sendMatchEmails(job: any, candidate: any, score: number) {
       console.log("[Email] Resend API key found - attempting email send");
       
       await resend.emails.send({
-        from: 'GRAVITAS <onboarding@resend.dev>',
+        from: 'Clauhire <onboarding@resend.dev>',
         to: 'delivered@resend.dev', // Resend test address
-        subject: `⚡ GRAVITAS: New Match — ${job.job_title} at ${job.company_name}`,
+        subject: `⚡ Clauhire: New Match — ${job.job_title} at ${job.company_name}`,
         html: `
           <div style="font-family:Inter,sans-serif;background:#F7F6F3;padding:40px">
-            <h2 style="color:#FF6B3D">⚡ GRAVITAS Match</h2>
+            <h2 style="color:#FF6B3D">⚡ Clauhire Match</h2>
             <div style="background:white;padding:24px;border-radius:12px;border:1px solid #EAEAEA">
               <p><strong>Role:</strong> ${job.job_title}</p>
               <p><strong>Company:</strong> ${job.company_name}</p>
@@ -273,7 +273,7 @@ export async function runMatchingForProfile(profileId: string, role: "CANDIDATE"
         const expYears = candidate.experience_years || 'Not specified';
         await appendMatchMessageToChat(
           candidate.profile_id,
-          `⚡ Great news! GAIA found a job match for you!\n\n` +
+          `⚡ Great news! Claura found a job match for you!\n\n` +
           `Company: ${job.company_name || 'Confidential'}\n` +
           `Role: ${job.job_title}\n` +
           `Salary: ₹${job.salary_min || '?'}-${job.salary_max || '?'}/month\n` +
@@ -285,7 +285,7 @@ export async function runMatchingForProfile(profileId: string, role: "CANDIDATE"
         // 3. Chat message for RECRUITER
         await appendMatchMessageToChat(
           job.profile_id,
-          `⚡ GAIA found a matching candidate!\n\n` +
+          `⚡ Claura found a matching candidate!\n\n` +
           `Name: ${candidate.profiles?.full_name || 'Anonymous'}\n` +
           `Role: ${candidate.job_title || 'Not specified'}\n` +
           `Skills: ${(candidate.skills || []).join(', ') || 'Not specified'}\n` +

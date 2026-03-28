@@ -18,7 +18,7 @@ export default function CTA() {
             Start <span className="text-accent">hiring</span> with precision.
           </h2>
           <p className="text-muted mb-8 max-w-lg mx-auto">
-            GRAVITAS gives you the precision tools to build world-class teams. 
+            Clauhire gives you the precision tools to build world-class teams. 
             No friction. Just matches.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
