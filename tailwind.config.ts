@@ -4,52 +4,38 @@ const config: Config = {
   content: [
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
+        primary: '#FF6A2A',
+        dark: '#0F0F0F',
+        light: '#F6F1EB',
+        card: '#FFFFFF',
+        mint: '#CFE8E5',
+        muted: '#6B7280',
+        
+        // Retaining old variables if they are used elsewhere
         background: "var(--background)",
         foreground: "var(--foreground)",
-        card: "var(--card)",
         border: "var(--border)",
         accent: {
           DEFAULT: "#FF6B3D",
           hover: "#FF8C5A",
         },
-        muted: "var(--muted)",
-        subtle: "var(--subtle)",
-        success: "var(--success)",
-        error: "var(--error)",
-        warning: "var(--warning)",
-        
-        // Brand Colors
-        orange: { DEFAULT: '#FF6B3D', light: '#FFF0EB', dark: '#E5512A' },
+        orange: { DEFAULT: '#FF6A2A', light: '#FFF0EB', dark: '#E5512A' },
         gold: '#FFD166',
         glass: 'rgba(255,255,255,0.25)',
-        dark: { bg: '#0F0F1A', surface: '#1A1A2E', card: '#252540' }
       },
       fontFamily: {
-        sans: ["Poppins", "sans-serif"],
+        serif: ['Playfair Display', 'serif'],
+        sans: ['Inter', 'sans-serif'],
       },
       borderRadius: {
+        card: '20px',
         glass: '24px'
       },
-      fontSize: {
-        "h1": ["40px", { lineHeight: "1.2", fontWeight: "600" }],
-        "h2": ["32px", { lineHeight: "1.2", fontWeight: "600" }],
-        "h3": ["24px", { lineHeight: "1.2", fontWeight: "500" }],
-        "body-lg": ["18px", { lineHeight: "1.5", fontWeight: "400" }],
-        "body": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
-        "small": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
-      },
-      spacing: {
-        "xs": "4px",
-        "sm": "8px",
-        "md": "16px",
-        "lg": "24px",
-        "xl": "32px",
-        "2xl": "48px",
-        "3xl": "64px",
+      maxWidth: {
+        container: '1280px'
       },
       keyframes: {
         fadeSlideUp: {

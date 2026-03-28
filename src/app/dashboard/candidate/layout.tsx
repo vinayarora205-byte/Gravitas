@@ -1,13 +1,13 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 
 export default function CandidateLayout({
-  children,
+ children,
 }: {
-  children: React.ReactNode;
+ children: React.ReactNode;
 }) {
-  return (
-    <DashboardLayout role="CANDIDATE">
-      {children}
-    </DashboardLayout>
-  );
+ return (
+ <DashboardLayout role="CANDIDATE">
+ {children}
+ </DashboardLayout>
+ );
 }

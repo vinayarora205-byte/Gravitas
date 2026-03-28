@@ -1,472 +1,797 @@
-/* eslint-disable */
-// @ts-nocheck
 "use client"
-
-import React, { useState, useEffect } from 'react';
-import { motion, useAnimation, useInView, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { 
-  RocketLaunch, ChatCircle, Lightning, Star, Handshake, Brain, MagicWand,
-  Trophy, ArrowRight, CheckCircle, Bell, Diamond, Microphone, FileText,
-  Users, ChartBar, Lock, Globe, Sun, Moon, Plus, Minus, ArrowsClockwise
+  ChatCircleText, FileText, Brain, Lightning, Bell, MicrophoneStage,
+  Plus, X, CheckCircle, ArrowRight, CaretDown
 } from '@phosphor-icons/react';
-import { useTheme } from 'next-themes';
 import Link from 'next/link';
-import { fadeUp, staggerChildren, scaleIn, float } from '@/lib/animations';
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { 
+    opacity: 1, y: 0, 
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1], staggerChildren: 0.1 } 
+  }
+};
+const childVariant = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+};
 
 export default function LandingPage() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [activeTab, setActiveTab] = useState<'recruiters' | 'candidates'>('recruiters');
+  const router = useRouter();
+  const [activeHowTab, setActiveHowTab] = useState<'recruiters'|'candidates'>('recruiters');
+  const [activeFeaturesTab, setActiveFeaturesTab] = useState<'recruiters'|'candidates'>('recruiters');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  if (!mounted) return null;
-
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden">
-      {/* BACKGROUND GRADIENTS */}
-      <div className={`fixed inset-0 z-[-1] transition-colors duration-500 ${theme === 'dark' ? 'bg-[linear-gradient(135deg,#0F0F1A,#1A1A2E,#1F0F0A)]' : 'bg-[linear-gradient(135deg,#FFF5F2,#FAFAFA,#FFF0E8)]'}`} />
-      
-      {/* FLOATING ORBS */}
-      <motion.div animate={{ y: [0, -30, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#FF6B3D] blur-[80px] opacity-20 pointer-events-none" />
-      <motion.div animate={{ y: [0, 40, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full bg-[#FFD166] blur-[60px] opacity-15 pointer-events-none" />
-      <motion.div animate={{ y: [0, -20, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} className="absolute top-[40%] left-[40%] w-[300px] h-[300px] rounded-full bg-[#FF8C5A] blur-[100px] opacity-10 pointer-events-none" />
-
-      {/* NAVBAR */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'glass py-3 border-b border-white/10' : 'py-5 bg-transparent'}`}>
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-extrabold italic text-gradient tracking-tight">
-            Clauhire
-          </Link>
-          <div className="hidden md:flex items-center gap-8 font-medium text-sm">
-            <a href="#features" className="hover:text-orange transition-colors">Features</a>
-            <a href="#how-it-works" className="hover:text-orange transition-colors">How it Works</a>
-            <a href="#pricing" className="hover:text-orange transition-colors">Pricing</a>
-            <a href="#faq" className="hover:text-orange transition-colors">FAQ</a>
-          </div>
-          <div className="flex items-center gap-4">
-            <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 rounded-full glass hover:bg-orange/10 transition-colors">
-              {theme === 'dark' ? <Sun size={20} weight="duotone" className="text-gold" /> : <Moon size={20} weight="duotone" className="text-orange" />}
-            </button>
-            <Link href="/sign-in" className="hidden sm:block px-5 py-2 font-semibold text-sm rounded-full border border-orange text-orange hover:bg-orange/10 transition-colors">
-              Sign In
-            </Link>
-            <Link href="/role-select" className="px-5 py-2 font-semibold text-sm rounded-full bg-orange text-white hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,107,61,0.4)]">
-              Get Started
-            </Link>
-          </div>
+    <main style={{ background: '#F6F1EB' }} className="min-h-screen font-sans text-dark overflow-x-hidden">
+      {/* SECTION 0: NAVBAR */}
+      <nav className="fixed top-0 w-full h-[72px] bg-[#F6F1EB]/90 backdrop-blur-[20px] border-b border-black/5 z-50 flex items-center justify-between px-6 lg:px-12">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold font-serif text-lg">C</div>
+          <span className="font-serif text-[20px] font-bold">Clauhire</span>
+        </div>
+        <div className="hidden md:flex items-center gap-8 font-sans text-[14px] font-medium text-dark/80">
+          <a href="#features" className="hover:text-primary transition-colors">Features</a>
+          <a href="#how-it-works" className="hover:text-primary transition-colors">How It Works</a>
+          <a href="#" className="hover:text-primary transition-colors" onClick={() => setActiveHowTab('recruiters')}>For Recruiters</a>
+          <a href="#" className="hover:text-primary transition-colors" onClick={() => setActiveHowTab('candidates')}>For Candidates</a>
+          <a href="#faq" className="hover:text-primary transition-colors">FAQ</a>
+        </div>
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.push('/sign-in')} className="bg-transparent border border-dark rounded-xl px-4 py-2 text-sm font-medium hover:bg-dark hover:text-white transition-colors">Sign In</button>
+          <button onClick={() => router.push('/role-select')} className="bg-dark text-white rounded-xl px-5 py-2.5 text-sm font-medium hover:scale-105 transition-transform shadow-lg">Get Started Free &rarr;</button>
         </div>
       </nav>
 
-      {/* HERO SECTION */}
-      <section className="relative min-h-screen flex items-center pt-24 pb-12 px-6">
-        <div className="max-w-7xl mx-auto w-full grid md:grid-cols-2 gap-12 items-center">
+      {/* SECTION 1: HERO */}
+      <section className="bg-light min-h-screen pt-[120px] pb-[80px] px-6 lg:px-12 flex items-center justify-center overflow-hidden">
+        <div className="max-w-[1280px] w-full mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
           
-          {/* LEFT SIDE */}
-          <motion.div variants={staggerChildren} initial="initial" animate="animate" className="flex flex-col items-start gap-6">
-            <motion.span variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-[20px] text-[13px] font-semibold text-orange border border-orange/40 bg-[linear-gradient(135deg,rgba(255,107,61,0.1),rgba(255,209,102,0.1))]">
-              <RocketLaunch size={16} weight="duotone" />
-              AI-Powered Recruitment
-            </motion.span>
-            
-            <motion.h1 variants={fadeUp} className="text-[50px] sm:text-[72px] font-extrabold italic leading-[1.1] tracking-tight">
-              Hire Smarter,<br/>
-              <span className="text-gradient">Grow Faster</span>
+          <motion.div initial="hidden" animate="visible" variants={fadeInUp} className="w-full lg:w-[55%] pt-10">
+            <motion.div variants={childVariant} className="inline-block bg-dark text-white rounded-full px-4 py-2 font-sans text-[12px] font-medium mb-6">
+              ✦ AI-Powered Recruitment Platform
+            </motion.div>
+            <motion.h1 variants={childVariant} className="font-serif text-5xl md:text-[72px] font-bold leading-[1.1] text-dark">
+              Find the Perfect<br/>Talent, <span className="text-primary">Faster</span>
             </motion.h1>
-            
-            <motion.p variants={fadeUp} className="text-[18px] sm:text-[20px] text-muted max-w-[500px] leading-relaxed">
-              Claura, our AI agent handles everything — from sourcing to matching to connecting. Zero forms. Pure conversation.
+            <motion.p variants={childVariant} className="font-sans text-[18px] text-[#555] mt-6 max-w-[500px]">
+              Claura, our AI agent, handles everything — profile building, intelligent matching, and connecting serious candidates with top companies. Zero forms. Pure conversation.
             </motion.p>
+            <motion.div variants={childVariant} className="flex flex-col sm:flex-row gap-4 mt-10">
+              <button onClick={() => router.push('/role-select?role=recruiter')} className="bg-dark text-white rounded-xl px-8 py-4 font-sans text-[15px] font-medium hover:scale-[1.02] shadow-xl transition-all">Start Hiring Free &rarr;</button>
+              <button onClick={() => router.push('/role-select?role=candidate')} className="bg-transparent border-[1.5px] border-dark rounded-xl px-8 py-4 font-sans text-[15px] font-medium hover:bg-dark hover:text-white transition-all">I&apos;m Looking for Jobs</button>
+            </motion.div>
             
-            <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-4 mt-4">
-              <Link href="/role-select?role=recruiter" className="flex items-center gap-2 bg-orange text-white px-8 py-4 rounded-full font-semibold hover:scale-105 transition-transform shadow-[0_4px_24px_rgba(255,107,61,0.5)]">
-                Start Hiring Free <ArrowRight weight="bold" />
-              </Link>
-              <Link href="/role-select?role=candidate" className="px-8 py-4 rounded-full font-semibold glass border border-white/20 hover:bg-white/5 transition-colors">
-                Find Jobs
-              </Link>
-            </motion.div>
-
-            <motion.div variants={fadeUp} className="flex items-center gap-4 mt-8 pt-6 border-t border-white/10 w-full max-w-[500px]">
+            <motion.div variants={childVariant} className="mt-10 flex flex-col gap-3">
               <div className="flex -space-x-3">
-                {[1,2,3,4,5].map(i => (
-                  <img key={i} src={`https://ui-avatars.com/api/?name=User+${i}&background=FF6B3D&color=fff&rounded=true`} alt="User" className="w-10 h-10 rounded-full border-2 border-background" />
-                ))}
+                <img src="https://ui-avatars.com/api/?name=P+S&background=FF6A2A&color=fff&size=40" className="w-10 h-10 rounded-full border-2 border-light z-50" />
+                <img src="https://ui-avatars.com/api/?name=R+M&background=0F0F0F&color=fff&size=40" className="w-10 h-10 rounded-full border-2 border-light z-40" />
+                <img src="https://ui-avatars.com/api/?name=S+C&background=CFE8E5&color=0F0F0F&size=40" className="w-10 h-10 rounded-full border-2 border-light z-30" />
+                <img src="https://ui-avatars.com/api/?name=A+K&background=FF6A2A&color=fff&size=40" className="w-10 h-10 rounded-full border-2 border-light z-20" />
+                <img src="https://ui-avatars.com/api/?name=V+R&background=0F0F0F&color=fff&size=40" className="w-10 h-10 rounded-full border-2 border-light z-10" />
               </div>
-              <p className="text-sm font-medium text-muted">Trusted by <span className="text-foreground font-bold">2,000+</span> professionals</p>
+              <p className="font-sans text-[14px] font-medium text-dark/70">2,000+ professionals hired this month</p>
             </motion.div>
 
-            <motion.div variants={fadeUp} className="grid grid-cols-3 gap-6 w-full max-w-[500px] mt-4">
+            <motion.div variants={childVariant} className="mt-8 flex items-center gap-6 md:gap-8">
               <div>
-                <p className="text-2xl font-bold text-gradient">2 min</p>
-                <p className="text-xs text-muted uppercase tracking-wider font-semibold">Avg Match Time</p>
+                <div className="font-serif text-[40px] text-primary leading-tight">2 <span className="text-xl">min</span></div>
+                <div className="font-sans text-[13px] text-muted">Average match time</div>
               </div>
+              <div className="w-[1px] h-12 bg-dark/10"></div>
               <div>
-                <p className="text-2xl font-bold text-gradient">94%</p>
-                <p className="text-xs text-muted uppercase tracking-wider font-semibold">Match Accuracy</p>
+                <div className="font-serif text-[40px] text-primary leading-tight">94%</div>
+                <div className="font-sans text-[13px] text-muted">Match accuracy rate</div>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-gradient">10x</p>
-                <p className="text-xs text-muted uppercase tracking-wider font-semibold">Faster Hiring</p>
+              <div className="w-[1px] h-12 bg-dark/10 hidden sm:block"></div>
+              <div className="hidden sm:block">
+                <div className="font-serif text-[40px] text-primary leading-tight">10x</div>
+                <div className="font-sans text-[13px] text-muted">Faster than traditional hiring</div>
               </div>
             </motion.div>
           </motion.div>
 
-          {/* RIGHT SIDE */}
-          <motion.div variants={float} initial="initial" animate="animate" className="relative hidden md:flex items-center justify-center">
-            <div className="glass rounded-[24px] p-6 w-[400px] shadow-2xl relative z-10 border border-white/20">
-              <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[linear-gradient(135deg,#FF6B3D,#FF8C5A)] flex items-center justify-center text-white font-bold text-lg">C</div>
-                  <div>
-                    <h3 className="font-bold text-[16px]">Claura</h3>
-                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/><span className="text-xs text-muted">Online</span></div>
-                  </div>
+          <div className="w-full lg:w-[45%] relative h-[500px] lg:h-[580px] mt-10 lg:mt-0">
+            <motion.div 
+              animate={{ y: [0, -15, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[380px] bg-white rounded-[24px] shadow-[0_24px_80px_rgba(0,0,0,0.12)] p-6 z-20 border border-black/5"
+            >
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-black/5">
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-serif font-bold text-sm">C</div>
+                <div>
+                  <div className="font-serif text-[16px] font-bold text-dark leading-tight">Claura</div>
+                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-500"></div><span className="font-sans text-[12px] text-green-600 font-medium">Online</span></div>
                 </div>
               </div>
               
-              <div className="space-y-4 font-sans text-sm">
-                <div className="flex justify-end">
-                  <div className="bg-[linear-gradient(135deg,#FF6B3D,#FF8C5A)] text-white px-4 py-3 rounded-2xl rounded-br-sm max-w-[85%] shadow-md">
-                    I need a React developer, 3 years exp
-                  </div>
+              <div className="flex flex-col gap-4 font-sans text-[14px]">
+                <div className="self-end bg-dark text-white rounded-[16px] rounded-bl-[0px] px-4 py-2.5 max-w-[85%]">Hi! I need a React developer, 3+ years exp</div>
+                <div className="self-start bg-light text-dark rounded-[16px] rounded-br-[0px] px-4 py-2.5 max-w-[85%] shadow-sm">Got it! What&apos;s your monthly budget?</div>
+                <div className="self-end bg-dark text-white rounded-[16px] rounded-bl-[0px] px-4 py-2.5 max-w-[85%]">₹60,000 - ₹80,000</div>
+                <div className="self-start bg-light text-dark rounded-[16px] rounded-br-[0px] px-4 py-2.5 max-w-[95%] shadow-sm mb-2">
+                  Found 3 perfect matches! Top match: 94% compatibility
                 </div>
-                <div className="flex justify-start">
-                  <div className={`glass px-4 py-3 rounded-2xl rounded-bl-sm max-w-[85%] text-foreground shadow-sm ${theme === 'dark' ? 'bg-white/5' : 'bg-white/60'}`}>
-                    Got it! What&apos;s your budget range?
-                  </div>
+                
+                <div className="border border-black/10 rounded-xl p-3 bg-white shadow-sm flex flex-col gap-2">
+                  <div className="font-medium text-dark">Rahul K. — React Developer</div>
+                  <div className="text-[12px] text-muted">94% match &middot; ₹70,000/mo &middot; Remote</div>
+                  <button className="text-primary text-[13px] font-medium text-left mt-1 hover:text-orange-dark">View Match &rarr;</button>
                 </div>
-                <div className="flex justify-end">
-                  <div className="bg-[linear-gradient(135deg,#FF6B3D,#FF8C5A)] text-white px-4 py-3 rounded-2xl rounded-br-sm max-w-[85%] shadow-md">
-                    ₹60,000 - ₹80,000/month
+              </div>
+              <div className="mt-4 flex gap-1">
+                <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0 }} className="w-1.5 h-1.5 bg-primary rounded-full"></motion.div>
+                <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 bg-primary rounded-full"></motion.div>
+                <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 bg-primary rounded-full"></motion.div>
+              </div>
+            </motion.div>
+
+            <motion.div 
+              initial={{ x: 60, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.6, ease: "easeOut" }}
+              className="absolute right-0 top-[10%] bg-white shadow-xl rounded-xl p-4 border border-black/5 z-30 w-[220px]"
+            >
+              <div className="text-primary font-medium text-[13px] flexItems-center gap-1.5 mb-1">⚡ Match Found!</div>
+              <div className="text-dark text-[12px] font-medium truncate">Rahul K. &middot; React Developer</div>
+              <div className="text-green-600 text-[11px] mt-1 flex items-center gap-1"><div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>94% Compatibility</div>
+            </motion.div>
+
+            <motion.div 
+              initial={{ x: -60, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 1, duration: 0.6, ease: "easeOut" }}
+              className="absolute left-[-5%] bottom-[15%] bg-white shadow-xl rounded-xl p-4 border border-black/5 z-30 w-[200px]"
+            >
+              <div className="text-green-600 font-medium text-[13px] mb-1">🔓 Chat Unlocked</div>
+              <div className="text-muted text-[12px]">TechCorp &amp; Priya connected</div>
+            </motion.div>
+
+            <motion.div 
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.6 }}
+              className="absolute left-[5%] top-[5%] bg-white shadow-xl rounded-xl p-4 border border-black/5 z-10 w-[160px]"
+            >
+              <div className="text-muted text-[12px]">Active Matches</div>
+              <div className="font-serif text-[28px] text-primary leading-none mt-1">2,847</div>
+              <div className="text-green-600 text-[11px] mt-1">+12% this week</div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 2: MARQUEE */}
+      <section className="bg-white py-10 border-y border-[#E8E3DD] overflow-hidden">
+        <div className="text-center font-sans text-[13px] text-muted mb-6">Trusted by innovative teams worldwide</div>
+        <div className="relative flex overflow-x-hidden group">
+          <motion.div 
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{ ease: "linear", duration: 30, repeat: Infinity }}
+            className="flex whitespace-nowrap min-w-max"
+          >
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="flex">
+                {['TechVision', 'StartupHub', 'InnovateCo', 'GrowthLabs', 'FutureTech', 'ScaleUp', 'BuildFast', 'LaunchPad', 'NextGen', 'PivotAI', 'CloudBase', 'DataFlow', 'AIForge', 'TalentOps'].map((brand, j) => (
+                  <div key={`${i}-${j}`} className="bg-dark text-white font-sans text-[13px] font-medium px-5 py-2.5 rounded-full mx-3">
+                    {brand}
                   </div>
+                ))}
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+      {/* SECTION 3: DASHBOARD PREVIEW */}
+      <section id="features" className="bg-[#F6F1EB] py-[100px] px-6 lg:px-12 flex flex-col items-center relative overflow-hidden">
+        <div className="max-w-[1280px] w-full mx-auto text-center flex flex-col items-center">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp} className="flex flex-col items-center">
+            <div className="border border-orange text-orange font-medium text-[12px] px-4 py-1.5 rounded-full mb-6 uppercase tracking-wider">Platform Preview</div>
+            <h2 className="font-serif text-[40px] md:text-[52px] font-bold text-dark leading-tight mb-4">
+              Everything You Need,<br/>In One <span className="text-primary">Dashboard</span>
+            </h2>
+            <p className="font-sans text-[16px] text-[#555] max-w-[600px]">
+              A powerful command center for recruiters and candidates alike. 
+              Manage your matches, track applications, and hire faster.
+            </p>
+          </motion.div>
+
+          {/* Browser Mockup */}
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={fadeInUp} className="mt-16 relative w-full max-w-[1000px] mx-auto z-20">
+            <div className="bg-[#0F0F0F] rounded-[16px] p-2 md:p-3 shadow-[0_40px_120px_rgba(0,0,0,0.25)] relative">
+              <div className="bg-[#1A1A1A] rounded-[8px] flex items-center px-4 py-3 mb-2 md:mb-3">
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
                 </div>
-                <div className="flex justify-start">
-                  <div className={`glass px-4 py-3 rounded-2xl rounded-bl-sm flex items-center gap-1 shadow-sm ${theme === 'dark' ? 'bg-white/5' : 'bg-white/60'}`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange animate-[bounceCustom_600ms_infinite]" style={{animationDelay: '0ms'}}/>
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange animate-[bounceCustom_600ms_infinite]" style={{animationDelay: '200ms'}}/>
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange animate-[bounceCustom_600ms_infinite]" style={{animationDelay: '400ms'}}/>
+                <div className="mx-auto bg-black/40 text-white/60 font-sans text-[12px] px-6 py-1.5 rounded-md flex-1 max-w-[400px] text-center ml-4">clauhire.com/dashboard</div>
+              </div>
+              <div className="bg-light rounded-b-[8px] overflow-hidden relative">
+                <img src="/dashboard_stats_verification_v2_3002_1774089029561.webp" alt="Dashboard Preview" className="w-full object-cover border-b border-light" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden') }} />
+                {/* Fallback Mockup if Image Fails to Load */}
+                <div className="hidden w-full h-[500px] bg-[#F9F9F9] flex border border-black/5">
+                  <div className="w-[200px] border-r border-black/10 p-6 flex flex-col gap-4">
+                    <div className="h-6 w-24 bg-black/10 rounded"></div>
+                    <div className="h-8 w-full bg-primary/10 rounded mt-4"></div>
+                    <div className="h-8 w-full bg-black/5 rounded"></div>
+                    <div className="h-8 w-full bg-black/5 rounded"></div>
+                  </div>
+                  <div className="flex-1 p-8 flex flex-col gap-6">
+                    <div className="h-24 w-full bg-white rounded-xl shadow-sm border border-black/5"></div>
+                    <div className="h-48 w-full bg-white rounded-xl shadow-sm border border-black/5"></div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Floating Pills */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1, duration: 0.6 }} className="absolute -right-8 top-12 glass px-4 py-2.5 rounded-full flex items-center gap-2 border border-green-500/30 bg-green-500/10 shadow-lg z-20">
-              <Lightning size={18} weight="duotone" className="text-green-500" />
-              <span className="text-sm font-semibold text-foreground">Match Found! 94%</span>
+            {/* Floating feature pills */}
+            <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} className="absolute -left-4 md:-left-12 -top-6 bg-white shadow-xl rounded-xl p-3 border border-black/5 z-30 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+              <span className="font-sans text-[13px] font-medium text-dark">Real-time Notifications</span>
             </motion.div>
             
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1.5, duration: 0.6 }} className="absolute -left-12 bottom-20 glass px-4 py-2.5 rounded-full flex items-center gap-2 border border-orange/30 bg-orange/10 shadow-lg z-20">
-              <CheckCircle size={18} weight="duotone" className="text-orange" />
-              <span className="text-sm font-semibold text-foreground">Chat Unlocked</span>
+            <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }} className="absolute -right-4 md:-right-12 top-10 bg-white shadow-xl rounded-xl p-3 border border-black/5 z-30">
+              <span className="font-sans text-[13px] font-medium text-dark">Hiries Credit System</span>
+            </motion.div>
+
+            <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 2 }} className="absolute -left-6 md:-left-16 bottom-16 bg-white shadow-xl rounded-xl p-3 border border-black/5 z-30">
+              <span className="font-sans text-[13px] font-medium text-dark">AI Match Analytics</span>
+            </motion.div>
+
+            <motion.div animate={{ y: [0, 15, 0] }} transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 1.5 }} className="absolute -right-6 md:-right-10 -bottom-6 bg-white shadow-xl rounded-xl p-3 border border-black/5 z-30">
+              <span className="font-sans text-[13px] font-medium text-dark">Direct Messaging</span>
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* TRUSTED BY SECTION */}
-      <div className="py-10 border-y border-white/5 overflow-hidden glass rounded-none relative">
-        <div className="absolute left-0 top-0 w-32 h-full bg-gradient-to-r from-background to-transparent z-10" />
-        <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-background to-transparent z-10" />
-        <div className="max-w-7xl mx-auto px-6 mb-6">
-          <p className="text-center text-sm font-medium text-muted uppercase tracking-widest">Trusted by innovative teams</p>
-        </div>
-        <div className="flex w-[200%] animate-[marquee_20s_linear_infinite] whitespace-nowrap">
-          {["TechVision", "StartupHub", "InnovateCo", "GrowthLabs", "FutureTech", "ScaleUp", "BuildFast", "LaunchPad", "NextGen", "PivotAI"].map((company, i) => (
-             <div key={i} className="inline-flex glass mx-4 px-6 py-2 rounded-full font-semibold text-muted">
-               {company}
-             </div>
-          ))}
-          {["TechVision", "StartupHub", "InnovateCo", "GrowthLabs", "FutureTech", "ScaleUp", "BuildFast", "LaunchPad", "NextGen", "PivotAI"].map((company, i) => (
-             <div key={i+10} className="inline-flex glass mx-4 px-6 py-2 rounded-full font-semibold text-muted">
-               {company}
-             </div>
-          ))}
-        </div>
-        <style dangerouslySetInnerHTML={{__html: `
-          @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        `}} />
-      </div>
+      {/* SECTION 4: HOW IT WORKS */}
+      <section id="how-it-works" className="bg-[linear-gradient(135deg,#0F0F0F,#1A1A1A)] py-[120px] px-6 lg:px-12 overflow-hidden text-white relative">
+        <div className="max-w-[1280px] w-full mx-auto relative z-10 flex flex-col items-center">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp} className="flex flex-col items-center text-center">
+            <div className="border border-primary text-primary font-medium text-[12px] px-4 py-1.5 rounded-full mb-6 uppercase tracking-wider">Simple Process</div>
+            <h2 className="font-serif text-[40px] md:text-[52px] font-bold leading-tight mb-8">
+              From Conversation<br/>to Hire in Minutes
+            </h2>
+          </motion.div>
 
-      {/* HOW IT WORKS SECTION */}
-      <section id="how-it-works" className="py-24 px-6 relative">
-        <div className="max-w-7xl mx-auto flex flex-col items-center">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-[20px] text-[13px] font-semibold text-orange border border-orange/40 bg-[linear-gradient(135deg,rgba(255,107,61,0.1),rgba(255,209,102,0.1))] mb-6">
-            <MagicWand size={16} weight="duotone" /> Simple Process
-          </span>
-          <h2 className="text-4xl sm:text-5xl font-extrabold italic mb-12 text-center tracking-tight">Recruitment Reimagined</h2>
-          
-          <div className="flex bg-black/5 dark:bg-white/5 p-1.5 rounded-full mb-16 border border-white/10">
-            <button onClick={() => setActiveTab('recruiters')} className={`px-8 py-3 rounded-full font-semibold text-sm transition-all duration-300 ${activeTab === 'recruiters' ? 'bg-[linear-gradient(135deg,#FF6B3D,#FFD166)] text-white shadow-lg' : 'text-muted hover:text-foreground'}`}>For Recruiters</button>
-            <button onClick={() => setActiveTab('candidates')} className={`px-8 py-3 rounded-full font-semibold text-sm transition-all duration-300 ${activeTab === 'candidates' ? 'bg-[linear-gradient(135deg,#FF6B3D,#FFD166)] text-white shadow-lg' : 'text-muted hover:text-foreground'}`}>For Candidates</button>
+          <div className="flex bg-white/10 rounded-[10px] p-1 mb-16 relative">
+            <button 
+              onClick={() => setActiveHowTab('recruiters')}
+              className={`relative z-10 px-8 py-3 rounded-[8px] font-sans text-[15px] font-medium transition-colors ${activeHowTab === 'recruiters' ? 'text-white' : 'text-white/60 hover:text-white'}`}
+            >
+              For Recruiters
+            </button>
+            <button 
+              onClick={() => setActiveHowTab('candidates')}
+              className={`relative z-10 px-8 py-3 rounded-[8px] font-sans text-[15px] font-medium transition-colors ${activeHowTab === 'candidates' ? 'text-white' : 'text-white/60 hover:text-white'}`}
+            >
+              For Candidates
+            </button>
+            <motion.div 
+              layoutId="howTabIndicator" 
+              className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-primary rounded-[8px] z-0" 
+              initial={false}
+              animate={{ left: activeHowTab === 'recruiters' ? '4px' : 'calc(50%)' }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            />
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 relative w-full">
-            <div className="hidden md:block absolute top-[40%] left-[10%] right-[10%] border-t-2 border-dashed border-orange/20 z-0" />
-            
-            <motion.div initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} viewport={{once:true}} className="relative z-10 glass p-8 rounded-[24px] overflow-hidden group hover:border-orange/40 transition-colors">
-              <div className="absolute -top-10 -right-4 text-[120px] font-black italic text-orange opacity-5 group-hover:opacity-10 transition-opacity">01</div>
-              <div className="w-16 h-16 rounded-2xl bg-orange/10 flex items-center justify-center mb-6 border border-orange/20">
-                <ChatCircle size={32} weight="duotone" className="text-orange" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Tell Claura What You Need</h3>
-              <p className="text-muted text-sm leading-relaxed">
-                Just describe the role in plain language. Claura asks smart questions and builds a complete job profile automatically.
-              </p>
-            </motion.div>
-
-            <motion.div initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{delay:0.2}} className="relative z-10 glass p-8 rounded-[24px] overflow-hidden group hover:border-orange/40 transition-colors">
-              <div className="absolute -top-10 -right-4 text-[120px] font-black italic text-orange opacity-5 group-hover:opacity-10 transition-opacity">02</div>
-              <div className="w-16 h-16 rounded-2xl bg-orange/10 flex items-center justify-center mb-6 border border-orange/20">
-                <Lightning size={32} weight="duotone" className="text-orange" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">AI Finds Perfect Matches</h3>
-              <p className="text-muted text-sm leading-relaxed">
-                Our engine scans all candidates and surfaces the best matches with detailed compatibility scores instantly.
-              </p>
-            </motion.div>
-
-            <motion.div initial={{opacity:0, y:20}} whileInView={{opacity:1, y:0}} viewport={{once:true}} transition={{delay:0.4}} className="relative z-10 glass p-8 rounded-[24px] overflow-hidden group hover:border-orange/40 transition-colors">
-              <div className="absolute -top-10 -right-4 text-[120px] font-black italic text-orange opacity-5 group-hover:opacity-10 transition-opacity">03</div>
-              <div className="w-16 h-16 rounded-2xl bg-orange/10 flex items-center justify-center mb-6 border border-orange/20">
-                <Handshake size={32} weight="duotone" className="text-orange" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Connect and Hire</h3>
-              <p className="text-muted text-sm leading-relaxed">
-                Use Hiries to unlock direct chat with your top candidates. Full refund if hire is confirmed.
-              </p>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* COMPARISON TABLE */}
-      <section className="py-24 px-6">
-        <div className="max-w-5xl mx-auto flex flex-col items-center">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-[20px] text-[13px] font-semibold text-orange border border-orange/40 bg-[linear-gradient(135deg,rgba(255,107,61,0.1),rgba(255,209,102,0.1))] mb-6">
-            <Trophy size={16} weight="duotone" /> Why Clauhire
-          </span>
-          <h2 className="text-4xl md:text-5xl font-extrabold italic mb-12 tracking-tight text-center">See the Difference</h2>
-
-          <div className="w-full overflow-x-auto rounded-[24px] glass border border-white/10 shadow-2xl">
-            <table className="w-full text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr>
-                  <th className="p-6 text-muted font-semibold text-sm border-b border-white/10">Feature</th>
-                  <th className="p-6 font-bold text-orange bg-orange/5 border-b border-orange/20 text-center w-1/4">Clauhire</th>
-                  <th className="p-6 text-foreground font-semibold text-sm border-b border-white/10 text-center w-1/5">LinkedIn</th>
-                  <th className="p-6 text-foreground font-semibold text-sm border-b border-white/10 text-center w-1/5">Indeed</th>
-                  <th className="p-6 text-foreground font-semibold text-sm border-b border-white/10 text-center w-1/5">Agencies</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm">
-                {[
-                  { feature: "AI Conversation", cl: <CheckCircle size={20} weight="fill" className="text-green-500 mx-auto"/>, l: <Minus size={20} className="text-muted mx-auto"/>, i: <Minus size={20} className="text-muted mx-auto"/>, a: <Minus size={20} className="text-muted mx-auto"/> },
-                  { feature: "Auto Profile Build", cl: <CheckCircle size={20} weight="fill" className="text-green-500 mx-auto"/>, l: <Minus size={20} className="text-muted mx-auto"/>, i: <Minus size={20} className="text-muted mx-auto"/>, a: <Minus size={20} className="text-muted mx-auto"/> },
-                  { feature: "Real-time Matching", cl: <CheckCircle size={20} weight="fill" className="text-green-500 mx-auto"/>, l: <span className="text-gold font-bold text-center block">~</span>, i: <span className="text-gold font-bold text-center block">~</span>, a: <Minus size={20} className="text-muted mx-auto"/> },
-                  { feature: "Credit Safety (Hiries)", cl: <CheckCircle size={20} weight="fill" className="text-green-500 mx-auto"/>, l: <Minus size={20} className="text-muted mx-auto"/>, i: <Minus size={20} className="text-muted mx-auto"/>, a: <Minus size={20} className="text-muted mx-auto"/> },
-                  { feature: "Direct Chat", cl: <CheckCircle size={20} weight="fill" className="text-green-500 mx-auto"/>, l: <span className="text-gold font-bold text-center block">~</span>, i: <Minus size={20} className="text-muted mx-auto"/>, a: <CheckCircle size={20} weight="fill" className="text-green-500 mx-auto"/> },
-                  { feature: "Time to Match", cl: <span className="text-green-500 font-bold block text-center">2 min</span>, l: <span className="text-muted block text-center">Days</span>, i: <span className="text-muted block text-center">Days</span>, a: <span className="text-muted block text-center">Weeks</span> },
-                  { feature: "Cost", cl: <span className="text-green-500 font-bold block text-center">Low</span>, l: <span className="text-orange block text-center">High</span>, i: <span className="text-gold block text-center">Med</span>, a: <span className="text-orange block text-center">Very High</span> },
-                ].map((row, i) => (
-                  <tr key={i} className="hover:bg-orange/5 transition-colors border-b border-white/5 last:border-0 group">
-                    <td className="p-5 font-medium text-muted group-hover:text-foreground transition-colors">{row.feature}</td>
-                    <td className="p-5 bg-orange/5">{row.cl}</td>
-                    <td className="p-5">{row.l}</td>
-                    <td className="p-5">{row.i}</td>
-                    <td className="p-5">{row.a}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* DASHBOARD PREVIEW */}
-      <section className="py-24 px-6 relative">
-        <div className="max-w-6xl mx-auto flex flex-col items-center">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-[20px] text-[13px] font-semibold text-orange border border-orange/40 bg-[linear-gradient(135deg,rgba(255,107,61,0.1),rgba(255,209,102,0.1))] mb-6">
-            <ChartBar size={16} weight="duotone" /> Powerful Dashboard
-          </span>
-          <h2 className="text-4xl md:text-5xl font-extrabold italic mb-16 tracking-tight text-center">Everything in One Place</h2>
           <div className="relative w-full">
-            <div className="glass rounded-[24px] overflow-hidden border border-white/20 shadow-2xl relative z-10">
-              <div className="bg-black/10 dark:bg-white/5 px-4 py-3 border-b border-white/10 flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-400" />
-                <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                <div className="w-3 h-3 rounded-full bg-green-400" />
-                <div className="mx-auto bg-black/5 dark:bg-white/5 px-32 py-1 rounded-full text-xs text-muted">clauhire.com/dashboard</div>
-              </div>
-              <div className="aspect-[16/9] bg-background/50 flex">
-                <div className="w-[200px] border-r border-white/10 p-4 space-y-4">
-                  <div className="h-6 w-24 bg-white/10 rounded-full mb-8"/>
-                  {[1,2,3,4].map(i => <div key={i} className="h-8 w-full bg-white/5 rounded-lg"/>)}
-                </div>
-                <div className="flex-1 p-8">
-                  <div className="flex justify-between items-center mb-8">
-                    <div className="h-8 w-48 bg-white/10 rounded-full"/>
-                    <div className="flex gap-4"><div className="w-8 h-8 rounded-full bg-white/10"/><div className="w-8 h-8 rounded-full bg-orange"/></div>
+            {/* Connecting dashed line */}
+            <div className="hidden lg:block absolute top-[50%] left-0 right-0 h-[2px] border-t-2 border-dashed border-primary/30 z-0"></div>
+            
+            <AnimatePresence mode="wait">
+              {activeHowTab === 'recruiters' ? (
+                <motion.div key="rectab" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
+                  <div className="bg-white text-dark rounded-[20px] p-8 relative overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
+                    <div className="absolute -top-4 -right-4 font-serif text-[100px] font-bold text-black/5 leading-none select-none">01</div>
+                    <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6"><ChatCircleText size={32} weight="fill" className="text-primary"/></div>
+                    <h3 className="font-serif text-[22px] font-bold text-dark mb-3">Tell Claura What You Need</h3>
+                    <p className="font-sans text-[15px] text-[#555] mb-6 min-h-[100px]">Describe the role in plain language. Claura asks smart questions and builds a complete job profile automatically. No forms. No boring dropdowns.</p>
+                    <div className="inline-block bg-primary/10 text-primary text-[12px] font-medium px-3 py-1 rounded-full">Takes 3 minutes</div>
                   </div>
-                  <div className="grid grid-cols-3 gap-6">
-                    {[1,2,3].map(i => <div key={i} className="h-32 glass rounded-2xl border-t-4 border-t-orange p-4"/>)}
+                  <div className="bg-primary text-white rounded-[20px] p-8 relative overflow-hidden shadow-xl shadow-primary/20 group hover:-translate-y-2 transition-transform duration-300">
+                    <div className="absolute -top-4 -right-4 font-serif text-[100px] font-bold text-white/10 leading-none select-none">02</div>
+                    <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mb-6"><Lightning size={32} weight="fill" className="text-white"/></div>
+                    <h3 className="font-serif text-[22px] font-bold text-white mb-3">AI Finds Perfect Matches</h3>
+                    <p className="font-sans text-[15px] text-white/90 mb-6 min-h-[100px]">Our engine scans all candidates and surfaces the best matches with detailed compatibility scores in real-time.</p>
+                    <div className="inline-block bg-white/20 text-white text-[12px] font-medium px-3 py-1 rounded-full">Instant results</div>
                   </div>
-                </div>
-              </div>
-            </div>
+                  <div className="bg-white text-dark rounded-[20px] p-8 relative overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
+                    <div className="absolute -top-4 -right-4 font-serif text-[100px] font-bold text-black/5 leading-none select-none">03</div>
+                    <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6"><CheckCircle size={32} weight="fill" className="text-primary"/></div>
+                    <h3 className="font-serif text-[22px] font-bold text-dark mb-3">Connect and Hire</h3>
+                    <p className="font-sans text-[15px] text-[#555] mb-6 min-h-[100px]">Use Hiries to unlock direct chat with your top candidates. Only serious parties can connect. Full refund if hired.</p>
+                    <div className="inline-block bg-primary/10 text-primary text-[12px] font-medium px-3 py-1 rounded-full">Risk-free connection</div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div key="candtab" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
+                  {/* Candidates Tab Content matching exactly */}
+                  <div className="bg-white text-dark rounded-[20px] p-8 relative overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
+                    <div className="absolute -top-4 -right-4 font-serif text-[100px] font-bold text-black/5 leading-none select-none">01</div>
+                    <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6"><ChatCircleText size={32} weight="fill" className="text-primary"/></div>
+                    <h3 className="font-serif text-[22px] font-bold text-dark mb-3">Share Your Skills with Claura</h3>
+                    <p className="font-sans text-[15px] text-[#555] mb-6 min-h-[100px]">Just have a conversation. No resume needed to start. Claura extracts your full profile from your answers automatically.</p>
+                    <div className="inline-block bg-primary/10 text-primary text-[12px] font-medium px-3 py-1 rounded-full">Takes 4 minutes</div>
+                  </div>
+                  <div className="bg-primary text-white rounded-[20px] p-8 relative overflow-hidden shadow-xl shadow-primary/20 group hover:-translate-y-2 transition-transform duration-300">
+                    <div className="absolute -top-4 -right-4 font-serif text-[100px] font-bold text-white/10 leading-none select-none">02</div>
+                    <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mb-6"><Lightning size={32} weight="fill" className="text-white"/></div>
+                    <h3 className="font-serif text-[22px] font-bold text-white mb-3">Get Matched Automatically</h3>
+                    <p className="font-sans text-[15px] text-white/90 mb-6 min-h-[100px]">Sit back while our AI finds roles that match your skills, salary expectations, and work preferences perfectly.</p>
+                    <div className="inline-block bg-white/20 text-white text-[12px] font-medium px-3 py-1 rounded-full">Instant results</div>
+                  </div>
+                  <div className="bg-white text-dark rounded-[20px] p-8 relative overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
+                    <div className="absolute -top-4 -right-4 font-serif text-[100px] font-bold text-black/5 leading-none select-none">03</div>
+                    <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6"><CheckCircle size={32} weight="fill" className="text-primary"/></div>
+                    <h3 className="font-serif text-[22px] font-bold text-dark mb-3">Land Your Dream Job</h3>
+                    <p className="font-sans text-[15px] text-[#555] mb-6 min-h-[100px]">Accept matches with Hiries. If you get hired, all your Hiries are refunded. Zero risk for successful hires.</p>
+                    <div className="inline-block bg-primary/10 text-primary text-[12px] font-medium px-3 py-1 rounded-full">Total safety</div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </section>
 
-      {/* PRICING */}
-      <section id="pricing" className="py-24 px-6 relative">
-        <div className="max-w-7xl mx-auto flex flex-col items-center">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-[20px] text-[13px] font-semibold text-orange border border-orange/40 bg-[linear-gradient(135deg,rgba(255,107,61,0.1),rgba(255,209,102,0.1))] mb-6">
-            <Diamond size={16} weight="duotone" /> Simple Pricing
-          </span>
-          <h2 className="text-4xl md:text-5xl font-extrabold italic mb-16 tracking-tight text-center">Pay Only When You Connect</h2>
+      {/* SECTION 5: FEATURES SPLIT */}
+      <section className="bg-light py-[120px] px-6 lg:px-12 flex flex-col items-center overflow-hidden">
+        <div className="max-w-[1280px] w-full mx-auto flex flex-col items-center">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp} className="flex flex-col items-center text-center">
+            <div className="border border-orange text-orange font-medium text-[12px] px-4 py-1.5 rounded-full mb-6 uppercase tracking-wider">Features</div>
+            <h2 className="font-serif text-[40px] md:text-[52px] font-bold leading-tight mb-12 text-dark">
+              Built for Recruiters<br/>and <span className="text-primary">Candidates</span>
+            </h2>
+          </motion.div>
 
-          <div className="grid md:grid-cols-4 gap-6 w-full max-w-6xl">
-            {/* FREE */}
-            <div className="glass p-8 rounded-[24px] flex flex-col border border-white/10 hover:border-orange/30 transition-colors">
-              <h3 className="text-xl font-bold mb-2">Free</h3>
-              <div className="text-4xl font-extrabold text-gradient mb-1 w-max">0 Hiries</div>
-              <p className="text-sm text-green-500 font-medium mb-6">5 Free on Signup</p>
-              <ul className="space-y-3 mb-8 flex-1 text-sm text-muted">
-                <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange" weight="fill"/> AI Conversation</li>
-                <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange" weight="fill"/> View Matches</li>
-              </ul>
-              <Link href="/sign-up" className="w-full py-3 rounded-full text-center font-semibold text-sm border border-white/20 hover:bg-white/5 transition-colors">
-                Get Started Free
-              </Link>
-            </div>
-
-            {/* STARTER */}
-            <div className="glass p-8 rounded-[24px] flex flex-col border border-white/10 hover:border-orange/30 transition-colors">
-              <h3 className="text-xl font-bold mb-2">Starter</h3>
-              <div className="text-4xl font-extrabold text-foreground mb-1 w-max">10 Hiries</div>
-              <p className="text-sm text-muted mb-6">₹199</p>
-              <ul className="space-y-3 mb-8 flex-1 text-sm text-muted">
-                <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange" weight="fill"/> 5 Connections</li>
-                <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange" weight="fill"/> Direct Chat</li>
-              </ul>
-              <button className="w-full py-3 rounded-full text-center font-semibold text-sm border border-white/20 hover:bg-white/5 transition-colors">
-                Get Starter
-              </button>
-            </div>
-
-            {/* PRO */}
-            <div className="glass p-8 rounded-[24px] flex flex-col border-2 border-orange relative shadow-[0_0_30px_rgba(255,107,61,0.15)] transform md:-translate-y-4 bg-orange/5">
-              <div className="absolute -top-3 right-6 bg-orange text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">Most Popular</div>
-              <h3 className="text-xl font-bold mb-2 text-foreground">Pro</h3>
-              <div className="text-4xl font-extrabold text-gradient mb-1 w-max">30 Hiries</div>
-              <p className="text-sm text-muted mb-6">₹499</p>
-              <ul className="space-y-3 mb-8 flex-1 text-sm text-foreground">
-                <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange" weight="fill"/> 15 Connections</li>
-                <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange" weight="fill"/> Direct Chat</li>
-                <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange" weight="fill"/> Priority Support</li>
-              </ul>
-              <button className="w-full py-3 rounded-full text-center font-bold text-sm bg-orange text-white hover:scale-105 transition-transform shadow-lg">
-                Get Pro
-              </button>
-            </div>
-
-            {/* BUSINESS */}
-            <div className="glass p-8 rounded-[24px] flex flex-col border border-white/10 hover:border-orange/30 transition-colors">
-              <h3 className="text-xl font-bold mb-2">Business</h3>
-              <div className="text-4xl font-extrabold text-foreground mb-1 w-max">75 Hiries</div>
-              <p className="text-sm text-muted mb-6">₹999</p>
-              <ul className="space-y-3 mb-8 flex-1 text-sm text-muted">
-                <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange" weight="fill"/> 37 Connections</li>
-                <li className="flex items-center gap-2"><CheckCircle size={16} className="text-orange" weight="fill"/> Dedicated Account</li>
-              </ul>
-              <button className="w-full py-3 rounded-full text-center font-semibold text-sm border border-white/20 hover:bg-white/5 transition-colors">
-                Get Business
-              </button>
-            </div>
+          <div className="w-full flex justify-center mb-16 space-x-8 border-b border-black/10">
+            <button 
+              onClick={() => setActiveFeaturesTab('recruiters')}
+              className={`pb-4 px-2 font-serif text-[24px] font-medium transition-colors relative ${activeFeaturesTab === 'recruiters' ? 'text-primary' : 'text-dark/40 hover:text-dark/60'}`}
+            >
+              Recruiters
+              {activeFeaturesTab === 'recruiters' && <motion.div layoutId="featTabUnderline" className="absolute bottom-[-1px] left-0 right-0 h-1 bg-primary rounded-t-sm"/>}
+            </button>
+            <button 
+              onClick={() => setActiveFeaturesTab('candidates')}
+              className={`pb-4 px-2 font-serif text-[24px] font-medium transition-colors relative ${activeFeaturesTab === 'candidates' ? 'text-primary' : 'text-dark/40 hover:text-dark/60'}`}
+            >
+              Candidates
+              {activeFeaturesTab === 'candidates' && <motion.div layoutId="featTabUnderline" className="absolute bottom-[-1px] left-0 right-0 h-1 bg-primary rounded-t-sm"/>}
+            </button>
           </div>
+
+          <div className="w-full">
+            <AnimatePresence mode="wait">
+              {activeFeaturesTab === 'recruiters' ? (
+                <motion.div key="feat-rec" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="bg-[#0F0F0F] text-white rounded-[24px] p-8 flex flex-col hover:-translate-y-1 transition-transform border border-black/5 shadow-sm">
+                    <ChatCircleText size={32} className="text-primary mb-6"/>
+                    <h3 className="font-serif text-xl font-bold mb-3">AI-Powered Job Posting</h3>
+                    <p className="font-sans text-[14px] text-white/70 mb-6 flex-1">Tell Claura about your role in natural language. No job description templates. Just a conversation.</p>
+                    <div className="flex items-center text-primary font-medium text-[14px] mt-auto">Learn more <ArrowRight className="ml-2" size={16}/></div>
+                  </div>
+                  <div className="bg-white text-dark rounded-[24px] p-8 flex flex-col hover:-translate-y-1 transition-transform border border-black/5 shadow-sm">
+                    <Brain size={32} className="text-primary mb-6"/>
+                    <h3 className="font-serif text-xl font-bold mb-3">Smart Candidate Matching</h3>
+                    <p className="font-sans text-[14px] text-muted mb-6 flex-1">Our engine scores every candidate on skills, salary fit, and culture alignment automatically.</p>
+                  </div>
+                  <div className="bg-primary text-white rounded-[24px] p-8 flex flex-col hover:-translate-y-1 transition-transform border border-black/5 shadow-sm">
+                    <CheckCircle size={32} className="text-white mb-6"/>
+                    <h3 className="font-serif text-xl font-bold mb-3">Hiries Safety System</h3>
+                    <p className="font-sans text-[14px] text-white/90 mb-6 flex-1">Only committed candidates reach you. Our credit system filters out time-wasters before they reach your inbox.</p>
+                  </div>
+                  <div className="bg-[#CFE8E5] text-[#0F0F0F] rounded-[24px] p-8 flex flex-col hover:-translate-y-1 transition-transform border border-black/5 shadow-sm">
+                    <Bell size={32} className="text-[#0F0F0F] mb-6"/>
+                    <h3 className="font-serif text-xl font-bold mb-3">Real-time Notifications</h3>
+                    <p className="font-sans text-[14px] text-[#333] mb-6 flex-1">Get instant alerts when candidates match, accept, or message you — on platform and via email.</p>
+                  </div>
+                  <div className="bg-[#0F0F0F] text-white rounded-[24px] p-8 flex flex-col hover:-translate-y-1 transition-transform border border-black/5 shadow-sm">
+                    <ChatCircleText size={32} className="text-primary mb-6"/>
+                    <h3 className="font-serif text-xl font-bold mb-3">Direct Candidate Chat</h3>
+                    <p className="font-sans text-[14px] text-white/70 mb-6 flex-1">When both parties commit, unlock a direct private chat. No third-party apps needed.</p>
+                  </div>
+                  <div className="bg-white text-dark rounded-[24px] p-8 flex flex-col hover:-translate-y-1 transition-transform border border-black/5 shadow-sm">
+                    <FileText size={32} className="text-primary mb-6"/>
+                    <h3 className="font-serif text-xl font-bold mb-3">Hire Analytics</h3>
+                    <p className="font-sans text-[14px] text-muted mb-6 flex-1">Track your active roles, match rates, and time-to-hire. Data-driven recruitment decisions.</p>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div key="feat-cand" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Candidates Tab Grid matching instructions */}
+                  <div className="bg-primary text-white rounded-[24px] p-8 flex flex-col hover:-translate-y-1 transition-transform border border-black/5 shadow-sm">
+                    <ChatCircleText size={32} className="text-white mb-6"/>
+                    <h3 className="font-serif text-xl font-bold mb-3">Zero-Form Profile Building</h3>
+                    <p className="font-sans text-[14px] text-white/90 mb-6 flex-1">Just chat with Claura. She extracts your skills, experience, and preferences automatically.</p>
+                  </div>
+                  <div className="bg-[#0F0F0F] text-white rounded-[24px] p-8 flex flex-col hover:-translate-y-1 transition-transform border border-black/5 shadow-sm">
+                    <FileText size={32} className="text-primary mb-6"/>
+                    <h3 className="font-serif text-xl font-bold mb-3">Upload Resume or JD</h3>
+                    <p className="font-sans text-[14px] text-white/70 mb-6 flex-1">Drop your resume or a job description. Claura reads it instantly and builds your complete profile.</p>
+                  </div>
+                  <div className="bg-white text-dark rounded-[24px] p-8 flex flex-col hover:-translate-y-1 transition-transform border border-black/5 shadow-sm">
+                    <MicrophoneStage size={32} className="text-primary mb-6"/>
+                    <h3 className="font-serif text-xl font-bold mb-3">Voice Input Support</h3>
+                    <p className="font-sans text-[14px] text-muted mb-6 flex-1">Talk to Claura in English or Hindi. No typing needed. Just speak naturally.</p>
+                  </div>
+                  <div className="bg-[#CFE8E5] text-[#0F0F0F] rounded-[24px] p-8 flex flex-col hover:-translate-y-1 transition-transform border border-black/5 shadow-sm">
+                    <Lightning size={32} className="text-[#0F0F0F] mb-6"/>
+                    <h3 className="font-serif text-xl font-bold mb-3">Smart Job Matching</h3>
+                    <p className="font-sans text-[14px] text-[#333] mb-6 flex-1">Get matched with roles that fit your salary, skills, work type, and location — all automatically.</p>
+                  </div>
+                  <div className="bg-white text-dark rounded-[24px] p-8 flex flex-col hover:-translate-y-1 transition-transform border border-black/5 shadow-sm">
+                    <Brain size={32} className="text-primary mb-6"/>
+                    <h3 className="font-serif text-xl font-bold mb-3">Salary Negotiation AI</h3>
+                    <p className="font-sans text-[14px] text-muted mb-6 flex-1">Claura helps bridge salary gaps between you and recruiters. She negotiates on your behalf.</p>
+                  </div>
+                  <div className="bg-[#0F0F0F] text-white rounded-[24px] p-8 flex flex-col hover:-translate-y-1 transition-transform border border-black/5 shadow-sm">
+                    <CheckCircle size={32} className="text-primary mb-6"/>
+                    <h3 className="font-serif text-xl font-bold mb-3">Hiries Refund on Hire</h3>
+                    <p className="font-sans text-[14px] text-white/70 mb-6 flex-1">If you get hired, you get all your Hiries back. Only pay for connections that go nowhere.</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </section>
+      
+      {/* SECTION 6: MEET CLAURA */}
+      <section className="bg-white py-[120px] px-6 lg:px-12 overflow-hidden">
+        <div className="max-w-[1280px] w-full mx-auto flex flex-col lg:flex-row items-center gap-16">
           
-          <div className="flex flex-wrap justify-center gap-4 mt-12">
-            <span className="glass px-5 py-2 rounded-full text-sm font-medium flex items-center gap-2 text-muted"><Diamond size={16} className="text-orange"/> 2 Hiries per connection</span>
-            <span className="glass px-5 py-2 rounded-full text-sm font-medium flex items-center gap-2 text-muted"><ArrowsClockwise size={16} className="text-orange"/> Full refund if declined</span>
-            <span className="glass px-5 py-2 rounded-full text-sm font-medium flex items-center gap-2 text-muted"><Trophy size={16} className="text-orange"/> Refund on successful hire</span>
-          </div>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={fadeInUp} className="w-full lg:w-1/2">
+            <div className="bg-white/50 backdrop-blur-[20px] rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.1)] p-6 border border-black/5 relative">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-black/5">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-serif font-bold text-lg">C</div>
+                <div>
+                  <div className="font-serif text-[18px] font-bold text-dark leading-tight">Claura</div>
+                  <div className="font-sans text-[13px] text-muted font-medium">AI Hiring Agent</div>
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-4 font-sans text-[14px]">
+                <div className="self-end bg-[#0F0F0F] text-white rounded-[16px] rounded-bl-[0px] px-4 py-2.5 max-w-[85%]">I am a video editor, 4 years exp</div>
+                <div className="self-start bg-[#F6F1EB] text-dark rounded-[16px] rounded-br-[0px] px-4 py-2.5 max-w-[85%] shadow-sm">Great! What&apos;s your expected salary?</div>
+                <div className="self-end bg-[#0F0F0F] text-white rounded-[16px] rounded-bl-[0px] px-4 py-2.5 max-w-[85%]">Around ₹50,000/month</div>
+                <div className="self-start bg-[#F6F1EB] text-dark rounded-[16px] rounded-br-[0px] px-4 py-2.5 max-w-[85%] shadow-sm">What work type do you prefer?</div>
+                <div className="self-end bg-[#0F0F0F] text-white rounded-[16px] rounded-bl-[0px] px-4 py-2.5 max-w-[85%]">Remote</div>
+                <div className="self-start bg-[#F6F1EB] text-dark rounded-[16px] rounded-br-[0px] px-4 py-2.5 max-w-[95%] shadow-sm mb-2">
+                  Perfect! I found a match for you!
+                </div>
+                
+                <div className="border border-black/10 rounded-xl p-4 bg-white shadow-sm flex flex-col gap-2">
+                  <div className="font-medium text-dark text-[15px]">BizEmporia — Video Editor</div>
+                  <div className="text-[13px] text-muted">₹45,000-55,000/mo &middot; Remote &middot; <span className="text-green-600 font-medium">89% match</span></div>
+                  <div className="text-[12px] text-[#333] mt-2 bg-light p-2 rounded-lg border border-black/5">
+                    This recruiter has accepted your profile.<br/>Spend 2 Hiries to unlock chat?
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button className="flex-1 bg-primary text-white text-[13px] font-medium py-2 rounded-lg hover:bg-orange-dark transition-colors">Accept 2 Hiries</button>
+                    <button className="flex-1 bg-transparent border border-black/10 text-dark text-[13px] font-medium py-2 rounded-lg hover:bg-black/5 transition-colors">Decline</button>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 flex gap-1">
+                <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0 }} className="w-1.5 h-1.5 bg-primary rounded-full"></motion.div>
+                <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 bg-primary rounded-full"></motion.div>
+                <motion.div animate={{ y: [0, -3, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 bg-primary rounded-full"></motion.div>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp} className="w-full lg:w-1/2">
+            <h2 className="font-serif text-[36px] md:text-[44px] font-bold text-dark leading-tight mb-4">
+              Meet Claura,<br/>Your AI <span className="text-primary">Hiring Agent</span>
+            </h2>
+            <p className="font-sans text-[16px] text-muted max-w-[500px] mb-10">
+              Claura doesn&apos;t just match — she understands, negotiates, and connects.
+            </p>
+
+            <div className="flex flex-col gap-6">
+              {[
+                { icon: <ChatCircleText size={24} weight="fill" />, title: "Natural Language", desc: "Talk normally. No forms or dropdowns ever." },
+                { icon: <FileText size={24} weight="fill" />, title: "Resume Analysis", desc: "Upload a PDF or image. Claura reads it all." },
+                { icon: <Brain size={24} weight="fill" />, title: "Smart Negotiation", desc: "Bridges salary gaps between both parties." },
+                { icon: <Lightning size={24} weight="fill" />, title: "Real-time Matching", desc: "Matches fire the moment profiles align." },
+                { icon: <Bell size={24} weight="fill" />, title: "Instant Alerts", desc: "Notifications via platform and email." },
+                { icon: <MicrophoneStage size={24} weight="fill" />, title: "Voice Input", desc: "Speak in English or Hindi naturally." }
+              ].map((item, i) => (
+                <div key={i} className="flex gap-4 items-start">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-primary">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <h4 className="font-sans text-[16px] font-bold text-dark mb-1">{item.title}</h4>
+                    <p className="font-sans text-[14px] text-muted">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
         </div>
       </section>
 
-      {/* FAQ */}
-      <section id="faq" className="py-24 px-6">
-        <div className="max-w-3xl mx-auto flex flex-col items-center">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-[20px] text-[13px] font-semibold text-orange border border-orange/40 bg-[linear-gradient(135deg,rgba(255,107,61,0.1),rgba(255,209,102,0.1))] mb-6">
-            <ChatCircle size={16} weight="duotone" /> Got Questions?
-          </span>
-          <h2 className="text-4xl md:text-5xl font-extrabold italic mb-12 tracking-tight text-center">Frequently Asked Questions</h2>
-          <div className="w-full space-y-4">
-            {[
-              {q: "What is Clauhire?", a: "Clauhire is an AI-powered recruitment platform where recruiters and candidates talk to Claura, our AI agent, instead of filling forms."},
-              {q: "What are Hiries?", a: "Hiries are credits used to accept matches. You spend 2 Hiries to connect with a match. Full refund if they decline or you hire them."},
-              {q: "Is my data secure?", a: "Yes. We use Supabase with row-level security, encrypted connections, and never share contact details until both agree."},
-              {q: "How do I get started?", a: "Sign up free, select your role, and start chatting with Claura. You get 5 free Hiries to begin."}
-            ].map((faq, i) => (
-              <div key={i} className="glass rounded-[20px] overflow-hidden transition-colors hover:border-orange/30 cursor-pointer" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
-                <div className="p-6 flex justify-between items-center">
-                  <h4 className={`font-bold transition-colors ${openFaq === i ? 'text-orange' : 'text-foreground'}`}>{faq.q}</h4>
-                  {openFaq === i ? <Minus className="text-orange" /> : <Plus className="text-muted" />}
-                </div>
-                <AnimatePresence>
-                  {openFaq === i && (
-                    <motion.div initial={{height:0, opacity:0}} animate={{height:'auto', opacity:1}} exit={{height:0, opacity:0}} className="px-6 pb-6 text-muted text-sm leading-relaxed">
-                      {faq.a}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+      {/* SECTION 7: COMPARISON TABLE */}
+      <section className="bg-[linear-gradient(135deg,#0F0F0F,#1A1A1A)] py-[120px] px-6 lg:px-12 text-white overflow-hidden">
+        <div className="max-w-[1280px] w-full mx-auto flex flex-col items-center">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp} className="flex flex-col items-center text-center">
+            <div className="border border-primary text-primary font-medium text-[12px] px-4 py-1.5 rounded-full mb-6 uppercase tracking-wider">Why Clauhire</div>
+            <h2 className="font-serif text-[40px] md:text-[52px] font-bold leading-tight mb-16">
+              We&apos;re Different.<br/>Here&apos;s Proof.
+            </h2>
+          </motion.div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={fadeInUp} className="w-full max-w-[900px] bg-white rounded-[20px] overflow-hidden shadow-2xl">
+            <div className="w-full overflow-x-auto">
+              <table className="w-full min-w-[700px] text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#0A0A0A] text-white">
+                    <th className="font-sans font-medium text-[15px] p-5 w-[32%] border-r border-[#222]">Feature</th>
+                    <th className="font-sans font-bold text-[15px] p-5 w-[17%] text-center text-primary border-r border-[#222] relative">
+                      CLAUHIRE
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary"></div>
+                    </th>
+                    <th className="font-sans font-medium text-[15px] p-5 w-[17%] text-center border-r border-[#222]">LinkedIn</th>
+                    <th className="font-sans font-medium text-[15px] p-5 w-[17%] text-center border-r border-[#222]">Indeed</th>
+                    <th className="font-sans font-medium text-[15px] p-5 w-[17%] text-center">Agency</th>
+                  </tr>
+                </thead>
+                <tbody className="font-sans text-[14px] text-dark">
+                  {[
+                    ['AI Conversation', { type: 'icon', val: 'yes' }, { type: 'icon', val: 'no' }, { type: 'icon', val: 'no' }, { type: 'icon', val: 'no' }],
+                    ['Auto Profile Build', { type: 'icon', val: 'yes' }, { type: 'icon', val: 'no' }, { type: 'icon', val: 'no' }, { type: 'icon', val: 'no' }],
+                    ['Real-time Matching', { type: 'icon', val: 'yes' }, { type: 'icon', val: 'partial' }, { type: 'icon', val: 'partial' }, { type: 'icon', val: 'no' }],
+                    ['Credit Safety', { type: 'icon', val: 'yes' }, { type: 'icon', val: 'no' }, { type: 'icon', val: 'no' }, { type: 'icon', val: 'no' }],
+                    ['Direct Chat', { type: 'icon', val: 'yes' }, { type: 'icon', val: 'partial' }, { type: 'icon', val: 'no' }, { type: 'icon', val: 'yes' }],
+                    ['Voice Input', { type: 'icon', val: 'yes' }, { type: 'icon', val: 'no' }, { type: 'icon', val: 'no' }, { type: 'icon', val: 'no' }],
+                    ['Resume Analysis', { type: 'icon', val: 'yes' }, { type: 'icon', val: 'partial' }, { type: 'icon', val: 'partial' }, { type: 'icon', val: 'yes' }],
+                    ['Time to Match', { type: 'text', val: '2 min', highlight: true }, { type: 'text', val: 'Days' }, { type: 'text', val: 'Days' }, { type: 'text', val: 'Weeks' }],
+                    ['Cost', { type: 'text', val: 'Low', highlight: true }, { type: 'text', val: 'High' }, { type: 'text', val: 'Med' }, { type: 'text', val: 'V.High' }],
+                    ['Hire Refund', { type: 'icon', val: 'yes' }, { type: 'icon', val: 'no' }, { type: 'icon', val: 'no' }, { type: 'icon', val: 'no' }],
+                  ].map((row: any[], i) => (
+                    <tr key={i} className={i % 2 === 0 ? 'bg-[#FAFAFA]' : 'bg-white'}>
+                      <td className="p-4 md:p-5 border-b border-[#F0F0F0] font-medium text-[#444] border-r border-[#F0F0F0]">{row[0]}</td>
+                      <td className="p-4 md:p-5 border-b border-[#F0F0F0] text-center bg-primary/5 border-r border-[#F0F0F0]">
+                        {row[1].type === 'icon' ? (
+                          <div className="flex justify-center">
+                            {row[1].val === 'yes' && <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white"><CheckCircle size={14} weight="bold"/></div>}
+                            {row[1].val === 'partial' && <div className="w-5 h-5 rounded-full bg-orange-400 flex items-center justify-center text-white"><span className="text-[14px] leading-none mb-1">~</span></div>}
+                            {row[1].val === 'no' && <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center text-white"><X size={12} weight="bold"/></div>}
+                          </div>
+                        ) : (
+                          <span className={`font-semibold ${row[1].highlight ? 'text-primary' : ''}`}>{row[1].val}</span>
+                        )}
+                      </td>
+                      <td className="p-4 md:p-5 border-b border-[#F0F0F0] text-center border-r border-[#F0F0F0]">
+                        {row[2].type === 'icon' ? (
+                          <div className="flex justify-center">
+                            {row[2].val === 'yes' && <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white"><CheckCircle size={14} weight="bold"/></div>}
+                            {row[2].val === 'partial' && <div className="w-5 h-5 rounded-full bg-orange-400 flex items-center justify-center text-white"><span className="text-[14px] leading-none mb-1">~</span></div>}
+                            {row[2].val === 'no' && <div className="w-5 h-5 rounded-full bg-[#E0E0E0] flex items-center justify-center text-white"><X size={12} weight="bold"/></div>}
+                          </div>
+                        ) : (
+                          <span className="font-medium text-muted">{row[2].val}</span>
+                        )}
+                      </td>
+                      <td className="p-4 md:p-5 border-b border-[#F0F0F0] text-center border-r border-[#F0F0F0]">
+                        {row[3].type === 'icon' ? (
+                          <div className="flex justify-center">
+                            {row[3].val === 'yes' && <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white"><CheckCircle size={14} weight="bold"/></div>}
+                            {row[3].val === 'partial' && <div className="w-5 h-5 rounded-full bg-orange-400 flex items-center justify-center text-white"><span className="text-[14px] leading-none mb-1">~</span></div>}
+                            {row[3].val === 'no' && <div className="w-5 h-5 rounded-full bg-[#E0E0E0] flex items-center justify-center text-white"><X size={12} weight="bold"/></div>}
+                          </div>
+                        ) : (
+                          <span className="font-medium text-muted">{row[3].val}</span>
+                        )}
+                      </td>
+                      <td className="p-4 md:p-5 border-b border-[#F0F0F0] text-center">
+                        {row[4].type === 'icon' ? (
+                          <div className="flex justify-center">
+                            {row[4].val === 'yes' && <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white"><CheckCircle size={14} weight="bold"/></div>}
+                            {row[4].val === 'partial' && <div className="w-5 h-5 rounded-full bg-orange-400 flex items-center justify-center text-white"><span className="text-[14px] leading-none mb-1">~</span></div>}
+                            {row[4].val === 'no' && <div className="w-5 h-5 rounded-full bg-[#E0E0E0] flex items-center justify-center text-white"><X size={12} weight="bold"/></div>}
+                          </div>
+                        ) : (
+                          <span className="font-medium text-muted">{row[4].val}</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* SECTION 8: TESTIMONIALS */}
+      <section className="bg-light py-[120px] px-6 lg:px-12 overflow-hidden">
+        <div className="max-w-[1280px] w-full mx-auto flex flex-col items-center">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp} className="flex flex-col items-center text-center">
+            <div className="border border-orange text-orange font-medium text-[12px] px-4 py-1.5 rounded-full mb-6 uppercase tracking-wider">Success Stories</div>
+            <h2 className="font-serif text-[40px] md:text-[52px] font-bold leading-tight mb-16 text-dark">
+              Real People,<br/>Real <span className="text-primary">Results</span>
+            </h2>
+          </motion.div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }} variants={fadeInUp} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+            <div className="bg-white rounded-[20px] p-8 shadow-[0_10px_40px_rgba(0,0,0,0.06)] border border-black/5 flex flex-col relative overflow-hidden group hover:-translate-y-1 transition-transform">
+              <div className="flex gap-1 mb-8">
+                {[...Array(5)].map((_, i) => <div key={i} className="w-2.5 h-2.5 rounded-full bg-primary"></div>)}
               </div>
+              <p className="font-serif italic text-[#333] text-[18px] leading-[1.6] mb-8 flex-1">
+                &quot;Clauhire found us 3 perfect developers in just 2 days. Claura is like having a brilliant recruiter available 24/7.&quot;
+              </p>
+              <div className="w-10 h-[1px] bg-black/10 mb-6"></div>
+              <div className="flex items-center gap-4">
+                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=48&h=48&fit=crop&crop=face" className="w-12 h-12 rounded-full object-cover shrink-0" alt="Avatar"/>
+                <div>
+                  <div className="font-sans font-bold text-[15px] text-dark">Priya Sharma</div>
+                  <div className="font-sans text-[13px] text-muted">HR Manager, TechVision</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#0F0F0F] rounded-[20px] p-8 shadow-xl flex flex-col relative overflow-hidden group hover:-translate-y-1 transition-transform">
+              <div className="flex gap-1 mb-8">
+                {[...Array(5)].map((_, i) => <div key={i} className="w-2.5 h-2.5 rounded-full bg-primary"></div>)}
+              </div>
+              <p className="font-serif italic text-white text-[18px] leading-[1.6] mb-8 flex-1">
+                &quot;I just told Claura my skills and salary. Within hours I had 3 interview requests. This platform is genuinely incredible.&quot;
+              </p>
+              <div className="w-10 h-[1px] bg-white/20 mb-6"></div>
+              <div className="flex items-center gap-4">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=48&h=48&fit=crop&crop=face" className="w-12 h-12 rounded-full object-cover shrink-0 border border-white/10" alt="Avatar"/>
+                <div>
+                  <div className="font-sans font-bold text-[15px] text-white">Rahul Mehta</div>
+                  <div className="font-sans text-[13px] text-primary">Full Stack Developer</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-[20px] p-8 shadow-[0_10px_40px_rgba(0,0,0,0.06)] border border-black/5 flex flex-col relative overflow-hidden group hover:-translate-y-1 transition-transform">
+              <div className="flex gap-1 mb-8">
+                {[...Array(5)].map((_, i) => <div key={i} className="w-2.5 h-2.5 rounded-full bg-primary"></div>)}
+              </div>
+              <p className="font-serif italic text-[#333] text-[18px] leading-[1.6] mb-8 flex-1">
+                &quot;The Hiries system is pure genius. Only serious candidates reach us now. Our hire quality went up 10x overnight.&quot;
+              </p>
+              <div className="w-10 h-[1px] bg-black/10 mb-6"></div>
+              <div className="flex items-center gap-4">
+                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=48&h=48&fit=crop&crop=face" className="w-12 h-12 rounded-full object-cover shrink-0" alt="Avatar"/>
+                <div>
+                  <div className="font-sans font-bold text-[15px] text-dark">Sarah Chen</div>
+                  <div className="font-sans text-[13px] text-muted">Founder, StartupXYZ</div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+      {/* SECTION 9: FAQ */}
+      <section className="bg-white py-[120px] px-6 lg:px-12 overflow-hidden border-t border-black/5">
+        <div className="max-w-[800px] w-full mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp} className="text-center mb-16">
+            <h2 className="font-serif text-[40px] md:text-[52px] font-bold leading-tight text-dark mb-4">
+              Got Questions?
+            </h2>
+            <p className="font-sans text-[16px] text-muted">Everything you need to know about Clauhire.</p>
+          </motion.div>
+
+          <div className="flex flex-col gap-4">
+            {[
+              { q: "What are Hiries?", a: "Hiries are our platform credits. Recruiters use them to unlock direct chats with candidates who have accepted their profile. If you hire the candidate, all Hiries spent on them are refunded." },
+              { q: "Do I need a resume to sign up?", a: "No! Candidates can simply chat with Claura to build their profile. However, if you have a resume, you can upload it and Claura will instantly extract your details." },
+              { q: "Is Clauhire free for candidates?", a: "Yes, 100% free. Candidates never pay to find a job or accept a match on Clauhire." },
+              { q: "How does the AI matching work?", a: "Claura analyzes over 50 data points including skills, salary expectations, work type preference, and location to calculate a percentage match between a candidate and a role." },
+              { q: "Can I use voice to talk to Claura?", a: "Absolutely. Claura supports voice input in both English and Hindi, making profile building incredibly accessible." }
+            ].map((faq, i) => (
+              <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="bg-[#F9F9F9] rounded-[16px] p-6 border border-black/5 hover:border-black/10 transition-colors cursor-pointer group">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-sans font-bold text-[16px] text-dark">{faq.q}</h3>
+                  <CaretDown size={20} className="text-muted group-hover:text-primary transition-colors" />
+                </div>
+                <p className="font-sans text-[14px] text-[#555] mt-4 leading-relaxed hidden group-hover:block transition-all">{faq.a}</p>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FINAL CTA */}
-      <section className="py-24 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-orange/20 dark:bg-orange/10 rounded-[40px] max-w-7xl mx-auto" />
-        <div className="max-w-4xl mx-auto relative z-10 flex flex-col items-center text-center py-16">
-          <h2 className="text-[40px] md:text-[56px] font-extrabold italic mb-6 tracking-tight text-foreground">Ready to Transform Your Hiring?</h2>
-          <p className="text-xl text-muted mb-10 max-w-2xl">Join 2,000+ professionals already using Clauhire to hire smarter and find their dream jobs.</p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link href="/sign-up" className="bg-orange text-white px-10 py-5 rounded-full font-bold hover:scale-105 transition-transform shadow-xl text-lg">
-              Get Started Free
-            </Link>
-            <button className="px-10 py-5 rounded-full font-bold hover:bg-white/5 transition-colors glass text-lg">
-              Watch Demo
-            </button>
-          </div>
+      {/* SECTION 10: FINAL CTA */}
+      <section className="bg-[linear-gradient(135deg,#FF6A2A,#FF8450)] py-[120px] px-6 lg:px-12 text-white relative overflow-hidden">
+        {/* Background Graphic */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+          <div className="absolute -top-[20%] -right-[10%] w-[500px] h-[500px] rounded-full bg-white/10 blur-[80px]"></div>
+          <div className="absolute -bottom-[20%] -left-[10%] w-[600px] h-[600px] rounded-full bg-[#0F0F0F]/10 blur-[100px]"></div>
+        </div>
+
+        <div className="max-w-[800px] w-full mx-auto text-center relative z-10">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeInUp}>
+            <h2 className="font-serif text-[48px] md:text-[64px] font-bold leading-tight mb-6">
+              Ready to Change How You Hire?
+            </h2>
+            <p className="font-sans text-[18px] text-white/90 mb-12 max-w-[600px] mx-auto">
+              Join thousands of recruiters and candidates who have already switched to AI-driven, zero-BS hiring.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/sign-up" className="w-full sm:w-auto bg-dark text-white font-sans text-[16px] font-bold px-10 py-5 rounded-[12px] hover:bg-black transition-all shadow-[0_10px_30px_rgba(0,0,0,0.2)] hover:-translate-y-1 text-center border-2 border-transparent">
+                Start Hiring Now
+              </Link>
+              <Link href="/sign-up" className="w-full sm:w-auto bg-white text-primary font-sans text-[16px] font-bold px-10 py-5 rounded-[12px] hover:bg-[#F9F9F9] transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)] hover:-translate-y-1 text-center border-2 border-white">
+                Find Your Dream Job
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="glass border-t border-white/10 pt-16 pb-8">
-        <div className="max-w-7xl mx-auto px-6 text-center text-muted text-sm space-y-6">
-          <div><span className="text-2xl font-extrabold italic text-gradient tracking-tight">Clauhire</span></div>
-          <p>Where Talent Meets Opportunity</p>
-          <div className="flex justify-center gap-6 pt-4">
-            <a href="#" className="hover:text-orange transition-colors">About</a>
-            <a href="#" className="hover:text-orange transition-colors">Pricing</a>
-            <a href="#" className="hover:text-orange transition-colors">Privacy</a>
-            <a href="#" className="hover:text-orange transition-colors">Terms</a>
+      {/* SECTION 11: FOOTER */}
+      <footer className="bg-[#0F0F0F] pt-20 pb-10 px-6 lg:px-12 text-white">
+        <div className="max-w-[1280px] w-full mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            <div className="col-span-1 md:col-span-2">
+              <Link href="/" className="font-serif font-bold text-[28px] tracking-tight text-white flex items-center gap-2 mb-6">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-white text-lg leading-none">C</span>
+                </div>
+                Clauhire
+              </Link>
+              <p className="font-sans text-[15px] text-white/60 max-w-[300px] mb-8">
+                The AI-powered recruitment platform that values your time. No forms, no spam, just matches.
+              </p>
+              <div className="flex gap-4">
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors">
+                  <div className="font-bold text-lg">𝕏</div>
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors">
+                  <div className="font-bold text-lg">in</div>
+                </a>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-sans font-bold text-[16px] mb-6">Product</h4>
+              <ul className="flex flex-col gap-4 font-sans text-[15px] text-white/60">
+                <li><a href="#how-it-works" className="hover:text-primary transition-colors">How it Works</a></li>
+                <li><a href="#features" className="hover:text-primary transition-colors">Features</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Pricing</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Wall of Love</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-sans font-bold text-[16px] mb-6">Legal</h4>
+              <ul className="flex flex-col gap-4 font-sans text-[15px] text-white/60">
+                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Cookie Policy</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
+              </ul>
+            </div>
           </div>
-          <div className="pt-8 border-t border-white/5 mt-8">
-            © 2026 Clauhire. Made with ❤️ in India.
+          
+          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="font-sans text-[14px] text-white/40">
+              &copy; {new Date().getFullYear()} Clauhire. All rights reserved.
+            </p>
+            <div className="flex items-center gap-2 font-sans text-[14px] text-white/40">
+              Made with <div className="text-red-500">♥</div> in India
+            </div>
           </div>
         </div>
       </footer>
-    </div>
+    </main>
   );
 }
