@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import { Briefcase, Users, CheckCircle, Diamond } from "@phosphor-icons/react";
 
 export default function RecruiterDashboard() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -92,57 +93,74 @@ export default function RecruiterDashboard() {
     <div className="fade-in">
       <div className="flex justify-between items-end mb-8 fade-slide-up">
         <div>
-          <h1 className="text-h2 text-foreground font-semibold mb-2">Welcome, {profile?.full_name || 'Recruiter'}</h1>
-          <p className="text-muted text-body">Here is an overview of your recruiting pipeline.</p>
+          <h1 className="text-[32px] font-extrabold italic tracking-tight text-foreground mb-1">Welcome, {profile?.full_name || 'Recruiter'}</h1>
+          <p className="text-muted text-sm font-medium">Here is an overview of your recruiting pipeline.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <button onClick={() => setShowHiries(!showHiries)} className="px-4 py-2 rounded-xl bg-accent/10 text-accent font-bold text-sm border border-accent/20 hover:bg-accent/20 transition-colors">
-              💎 {hBalance} Hiries
+          <div className="relative glass rounded-xl px-1">
+            <button onClick={() => setShowHiries(!showHiries)} className="px-4 py-2 font-bold text-sm text-orange flex items-center gap-2 hover:bg-white/5 transition-colors rounded-xl">
+              <Diamond size={18} weight="duotone" /> {hBalance} Hiries
             </button>
             {showHiries && (
-              <div className="absolute right-0 top-12 w-72 bg-card border border-border rounded-xl shadow-lg z-50 p-4">
-                <h4 className="text-sm font-bold text-foreground mb-3">💎 {hBalance} Hiries Available</h4>
+              <div className="absolute right-0 top-14 w-72 glass bg-card/90 border border-white/10 rounded-2xl shadow-2xl z-50 p-5">
+                <h4 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+                  <Diamond size={16} weight="duotone" className="text-orange"/> {hBalance} Hiries Available
+                </h4>
                 {hTransactions.length > 0 ? (
-                  <div className="space-y-2 mb-3">
+                  <div className="space-y-3 mb-4">
                     {hTransactions.map((t: any, i: number) => (
-                      <div key={i} className="flex justify-between text-xs text-muted border-b border-border/50 pb-1">
-                        <span>{t.type}</span>
-                        <span className={t.amount > 0 ? 'text-green-400' : 'text-red-400'}>{t.amount > 0 ? '+' : ''}{t.amount}</span>
+                      <div key={i} className="flex justify-between text-xs text-muted border-b border-white/5 pb-2">
+                        <span className="font-medium">{t.type}</span>
+                        <span className={t.amount > 0 ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>{t.amount > 0 ? '+' : ''}{t.amount}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted mb-3">No transactions yet</p>
+                  <p className="text-xs text-muted mb-4 font-medium">No transactions yet</p>
                 )}
-                <a href="/pricing" className="text-xs text-accent hover:underline">Need more? Contact us →</a>
+                <a href="/pricing" className="text-xs text-orange font-bold hover:underline">Need more? Buy now →</a>
               </div>
             )}
           </div>
-          <Button variant="primary" onClick={() => router.push('/chat')}>Post Job via Claura →</Button>
+          <button onClick={() => router.push('/chat')} className="bg-orange text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-[0_0_15px_rgba(255,107,61,0.4)] hover:scale-105 transition-transform">
+            Post Job via Claura →
+          </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <Card className="fade-slide-up" style={{ animationDelay: '50ms' }}>
-           <h3 className="text-subtle text-small font-medium uppercase tracking-wider mb-2">Active Roles</h3>
-           <div className="text-h2 font-semibold text-foreground">{jobs.length}</div>
-        </Card>
-        <Card className="fade-slide-up" style={{ animationDelay: '100ms' }}>
-           <h3 className="text-subtle text-small font-medium uppercase tracking-wider mb-2">Total Matches</h3>
-           <div className="text-h2 font-semibold text-foreground">{matchesCount}</div>
-        </Card>
-        <Card className="fade-slide-up" style={{ animationDelay: '150ms' }}>
-           <h3 className="text-subtle text-small font-medium uppercase tracking-wider mb-2">Profile Status</h3>
-           <div className="mt-2 text-foreground"><Badge variant="success">Verified</Badge></div>
-        </Card>
+        <div className="glass p-6 rounded-[20px] border-t-4 border-t-orange relative overflow-hidden group hover:bg-white/5 transition-colors fade-slide-up" style={{ animationDelay: '50ms' }}>
+          <div className="absolute top-6 right-6 p-2 bg-orange/10 rounded-xl">
+            <Briefcase className="text-orange" size={24} weight="duotone" />
+          </div>
+          <h3 className="text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Active Roles</h3>
+          <div className="text-[36px] font-extrabold text-gradient mb-2">{jobs.length}</div>
+          <div className="text-xs font-semibold text-green-500">+2% this week</div>
+        </div>
+        
+        <div className="glass p-6 rounded-[20px] border-t-4 border-t-orange relative overflow-hidden group hover:bg-white/5 transition-colors fade-slide-up" style={{ animationDelay: '100ms' }}>
+          <div className="absolute top-6 right-6 p-2 bg-orange/10 rounded-xl">
+            <Users className="text-orange" size={24} weight="duotone" />
+          </div>
+          <h3 className="text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Total Matches</h3>
+          <div className="text-[36px] font-extrabold text-gradient mb-2">{matchesCount}</div>
+          <div className="text-xs font-semibold text-green-500">+12% this week</div>
+        </div>
+
+        <div className="glass p-6 rounded-[20px] border-t-4 border-t-orange relative overflow-hidden group hover:bg-white/5 transition-colors fade-slide-up" style={{ animationDelay: '150ms' }}>
+          <div className="absolute top-6 right-6 p-2 bg-orange/10 rounded-xl">
+            <CheckCircle className="text-orange" size={24} weight="duotone" />
+          </div>
+          <h3 className="text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Profile Status</h3>
+          <div className="mt-4"><span className="bg-green-500/10 text-green-500 px-3 py-1 rounded-full text-sm font-bold border border-green-500/20">Verified</span></div>
+        </div>
       </div>
 
-      <h2 className="text-h3 text-foreground font-medium mb-6 fade-slide-up" style={{ animationDelay: '200ms' }}>
+      <h2 className="text-xl font-bold italic tracking-tight text-foreground mb-6 fade-slide-up" style={{ animationDelay: '200ms' }}>
         Active Job Listings
       </h2>
       
-      <div className="bg-card border border-border rounded-2xl overflow-hidden fade-slide-up shadow-sm" style={{ animationDelay: '250ms' }}>
+      <div className="glass border border-white/10 rounded-2xl overflow-hidden fade-slide-up shadow-sm" style={{ animationDelay: '250ms' }}>
         {jobs.length === 0 ? (
           <div className="p-12 text-center text-muted text-body flex flex-col items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mb-4 text-border" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -152,24 +170,24 @@ export default function RecruiterDashboard() {
           </div>
         ) : (
           <table className="w-full text-left border-collapse">
-            <thead className="bg-black/5 dark:bg-white/5 text-subtle text-xs uppercase tracking-wider font-medium">
+            <thead className="bg-white/5 text-muted text-xs uppercase tracking-wider font-bold">
               <tr>
-                <th className="p-4 border-b border-border">Role</th>
-                <th className="p-4 border-b border-border">Type</th>
-                <th className="p-4 border-b border-border">Budget</th>
-                <th className="p-4 border-b border-border">Status</th>
+                <th className="p-5 border-b border-white/10">Role</th>
+                <th className="p-5 border-b border-white/10">Type</th>
+                <th className="p-5 border-b border-white/10">Budget</th>
+                <th className="p-5 border-b border-white/10">Status</th>
               </tr>
             </thead>
             <tbody className="text-body text-foreground">
               {jobs.map((job) => (
-                <tr key={job.id} className="border-b border-border hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-                  <td className="p-4 font-medium">{job.job_title}</td>
-                  <td className="p-4 text-muted">{job.work_type}</td>
-                  <td className="p-4 text-muted">₹{job.salary_max}/mo</td>
-                  <td className="p-4">
-                    <Badge variant={job.is_active ? "success" : "default"}>
+                <tr key={job.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <td className="p-5 font-bold">{job.job_title}</td>
+                  <td className="p-5 text-muted font-medium">{job.work_type}</td>
+                  <td className="p-5 text-muted font-medium">₹{job.salary_max}/mo</td>
+                  <td className="p-5">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${job.is_active ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-white/10 text-muted border-white/20'}`}>
                       {job.is_active ? "Active" : "Closed"}
-                    </Badge>
+                    </span>
                   </td>
                 </tr>
               ))}

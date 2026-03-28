@@ -4,7 +4,6 @@ const config: Config = {
   content: [
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-
   darkMode: 'class',
   theme: {
     extend: {
@@ -14,17 +13,26 @@ const config: Config = {
         card: "var(--card)",
         border: "var(--border)",
         accent: {
-          DEFAULT: "var(--accent)",
-          hover: "var(--accent-hover)",
+          DEFAULT: "#FF6B3D",
+          hover: "#FF8C5A",
         },
         muted: "var(--muted)",
         subtle: "var(--subtle)",
         success: "var(--success)",
         error: "var(--error)",
         warning: "var(--warning)",
+        
+        // Brand Colors
+        orange: { DEFAULT: '#FF6B3D', light: '#FFF0EB', dark: '#E5512A' },
+        gold: '#FFD166',
+        glass: 'rgba(255,255,255,0.25)',
+        dark: { bg: '#0F0F1A', surface: '#1A1A2E', card: '#252540' }
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "sans-serif"],
+        sans: ["Poppins", "sans-serif"],
+      },
+      borderRadius: {
+        glass: '24px'
       },
       fontSize: {
         "h1": ["40px", { lineHeight: "1.2", fontWeight: "600" }],

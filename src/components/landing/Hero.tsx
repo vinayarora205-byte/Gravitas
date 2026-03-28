@@ -67,7 +67,7 @@ export default function Hero() {
             <div className="w-2.5 h-2.5 rounded-full bg-border" />
             <div className="w-2.5 h-2.5 rounded-full bg-border" />
             <div className="w-2.5 h-2.5 rounded-full bg-border" />
-            <span className="ml-3 text-xs text-subtle font-medium">claura@gravitas ~</span>
+            <span className="ml-3 text-xs text-subtle font-medium">claura@clauhire ~</span>
           </div>
           <div className="space-y-1 font-mono">
             {TYPED_LINES.slice(0, visibleLines).map((line, i) => (

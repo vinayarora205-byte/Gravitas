@@ -250,7 +250,7 @@ export async function processNewMatch(
         "-" + (job.salary_max || 0) + "/month</p>" +
         "<p><strong>Match Score:</strong> " + score + "%</p>" +
         "<p>Login to Clauhire to accept this match.</p>" +
-        "<a href='https://gravitas-dusky.vercel.app/chat' " +
+        "<a href='https://clauhire-dusky.vercel.app/chat' " +
         "style='background:#FF6B3D;color:white;padding:12px 24px;" +
         "border-radius:8px;text-decoration:none;display:inline-block;" +
         "margin-top:16px'>View Match →</a>"
@@ -266,7 +266,7 @@ export async function processNewMatch(
         "-" + (candidate.salary_max || 0) + "/month</p>" +
         "<p><strong>Match Score:</strong> " + score + "%</p>" +
         "<p>Login to Clauhire to connect with this candidate.</p>" +
-        "<a href='https://gravitas-dusky.vercel.app/chat' " +
+        "<a href='https://clauhire-dusky.vercel.app/chat' " +
         "style='background:#FF6B3D;color:white;padding:12px 24px;" +
         "border-radius:8px;text-decoration:none;display:inline-block;" +
         "margin-top:16px'>View Match →</a>"
@@ -353,7 +353,7 @@ export async function processNewMatch(
         "-" + (job.salary_max || 0) + "/month</p>" +
         "<p><strong>Match Score:</strong> " + score + "%</p>" +
         "<p>Login to Clauhire to accept this match.</p>" +
-        "<a href='https://gravitas-dusky.vercel.app/chat' " +
+        "<a href='https://clauhire-dusky.vercel.app/chat' " +
         "style='background:#FF6B3D;color:white;padding:12px 24px;" +
         "border-radius:8px;text-decoration:none;display:inline-block;" +
         "margin-top:16px'>View Match →</a>"
@@ -369,7 +369,7 @@ export async function processNewMatch(
         "-" + (candidate.salary_max || 0) + "/month</p>" +
         "<p><strong>Match Score:</strong> " + score + "%</p>" +
         "<p>Login to Clauhire to connect with this candidate.</p>" +
-        "<a href='https://gravitas-dusky.vercel.app/chat' " +
+        "<a href='https://clauhire-dusky.vercel.app/chat' " +
         "style='background:#FF6B3D;color:white;padding:12px 24px;" +
         "border-radius:8px;text-decoration:none;display:inline-block;" +
         "margin-top:16px'>View Match →</a>"

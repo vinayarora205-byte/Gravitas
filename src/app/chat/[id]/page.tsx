@@ -271,96 +271,48 @@ export default function ChatPage({ params }: { params: { id: string } }) {
   };
 
   return (
-    <div style={{
-      display: "flex",
-      height: "100vh",
-      background: "#F7F6F3",
-      fontFamily: "'Inter', sans-serif"
-    }}>
-
+    <div className="flex h-screen bg-background relative overflow-hidden font-sans">
+      <div className="fixed inset-0 z-[-1] transition-colors duration-500 bg-[linear-gradient(135deg,#FFF5F2,#FAFAFA,#FFF0E8)] dark:bg-[linear-gradient(135deg,#0F0F1A,#1A1A2E,#1F0F0A)]" />
+      
       {/* ===== SIDEBAR ===== */}
-      <div style={{
-        width: "260px",
-        background: "#FFFFFF",
-        borderRight: "1px solid #E5E5E5",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: 0
-      }}>
-        {/* New Chat Button */}
-        <div style={{ padding: "16px" }}>
+      <div className="w-[260px] glass border-r border-white/10 flex-col shrink-0 hidden md:flex h-full relative z-10">
+        <div className="p-5 border-b border-white/5 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-[linear-gradient(135deg,#FF6B3D,#FF8C5A)] flex items-center justify-center text-white font-bold text-sm shadow-[0_0_10px_rgba(255,107,61,0.5)]">
+            C
+          </div>
+          <div className="text-xl font-extrabold italic text-gradient tracking-tight">Claura</div>
+        </div>
+
+        <div className="p-4">
           <button
             onClick={createConversation}
-            style={{
-              width: "100%",
-              padding: "10px 16px",
-              background: "#FF6B3D",
-              color: "white",
-              border: "none",
-              borderRadius: "12px",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: "500"
-            }}
+            className="w-full py-2.5 bg-[linear-gradient(135deg,rgba(255,107,61,0.1),rgba(255,209,102,0.1))] border border-orange/20 text-orange rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-orange/10 transition-colors"
           >
             + New Chat
           </button>
         </div>
 
-        {/* Conversation List */}
-        <div style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "0 8px"
-        }}>
-          <div style={{
-            fontSize: "11px",
-            fontWeight: "600",
-            color: "#999",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            padding: "8px 12px",
-            marginBottom: "4px"
-          }}>
-            Recent
-          </div>
+        <div className="flex-1 overflow-y-auto px-3">
+          <div className="text-[10px] font-bold text-muted uppercase tracking-wider px-3 mb-2">History</div>
           {conversations.map((c) => (
             <div
               key={c.id}
               onClick={() => router.push(`/chat/${c.id}`)}
-              style={{
-                padding: "10px 12px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                fontSize: "14px",
-                color: c.id === activeConvo ? "#1F1F1F" : "#666",
-                background: c.id === activeConvo ? "#FFF5F2" : "transparent",
-                borderLeft: c.id === activeConvo
-                  ? "3px solid #FF6B3D"
-                  : "3px solid transparent",
-                marginBottom: "4px",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap" as const
-              }}
+              className={`px-4 py-3 rounded-[12px] cursor-pointer text-sm font-semibold mb-1 truncate transition-colors border ${
+                c.id === activeConvo
+                  ? "bg-orange/10 text-orange border-orange/20"
+                  : "text-muted hover:bg-white/5 border-transparent hover:text-foreground"
+              }`}
             >
               {c.title || "New Conversation"}
             </div>
           ))}
         </div>
 
-        {/* Back to Dashboard */}
-        <div style={{
-          padding: "16px",
-          borderTop: "1px solid #E5E5E5"
-        }}>
+        <div className="p-4 border-t border-white/10">
           <a
             href={role ? `/dashboard/${role.toLowerCase()}` : "/role-select"}
-            style={{
-              fontSize: "13px",
-              color: "#666",
-              textDecoration: "none"
-            }}
+            className="text-sm font-semibold text-muted hover:text-foreground transition-colors flex items-center gap-2"
           >
             ← Back to Dashboard
           </a>
@@ -368,185 +320,79 @@ export default function ChatPage({ params }: { params: { id: string } }) {
       </div>
 
       {/* ===== MAIN CHAT AREA ===== */}
-      <div style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        position: "relative"
-      }}>
-
-        {/* Header */}
-        <div style={{
-          padding: "16px 24px",
-          background: "#FFFFFF",
-          borderBottom: "1px solid #E5E5E5",
-          fontWeight: "600",
-          fontSize: "16px",
-          color: "#1F1F1F",
-          flexShrink: 0
-        }}>
-          Claura
-        </div>
-
+      <div className="flex-1 flex flex-col relative h-full">
         {/* Messages Area */}
-        <div style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "24px",
-          paddingBottom: "120px"
-        }}>
-          <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-            {messages.map((msg, i) => (
-              <div key={i} style={{
-                display: "flex",
-                justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
-                marginBottom: "16px",
-                alignItems: "flex-start",
-                gap: "8px"
-              }}>
-                {msg.role === "assistant" && (
-                  <div style={{
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "50%",
-                    background: "#FF6B3D",
-                    color: "white",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    flexShrink: 0
-                  }}>C</div>
-                )}
-                <div style={{
-                  maxWidth: "70%",
-                  padding: "12px 16px",
-                  borderRadius: msg.role === "user"
-                    ? "16px 16px 4px 16px"
-                    : "16px 16px 16px 4px",
-                  background: msg.role === "user"
-                    ? "#FFF0EB" : "#FFFFFF",
-                  border: msg.role === "user"
-                    ? "1px solid #FFD4C4"
-                    : "1px solid #EAEAEA",
-                  fontSize: "15px",
-                  lineHeight: "1.6",
-                  color: "#1F1F1F",
-                  whiteSpace: "pre-wrap" as const
-                }}>
-                  {msg.fileName && (
-                    <div style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "8px 12px",
-                      background: msg.role === "user" ? "#FFE5DC" : "#F7F6F3",
-                      borderRadius: "8px",
-                      marginBottom: msg.content ? "8px" : "0",
-                      fontSize: "13px",
-                      fontWeight: "500"
-                    }}>
-                      <span>{msg.fileType?.startsWith("image/") ? "🖼️" : "📎"}</span>
-                      {msg.fileName}
-                    </div>
+        <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8 pb-32">
+          <div className="max-w-[800px] mx-auto flex flex-col gap-6">
+            <AnimatePresence>
+              {messages.map((msg, i) => (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.2 }}
+                  key={i} 
+                  className={`flex items-end gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  {msg.role === "assistant" && (
+                    <div className="w-8 h-8 rounded-full bg-[linear-gradient(135deg,#FF6B3D,#FF8C5A)] text-white flex items-center justify-center text-sm font-bold shadow-[0_0_10px_rgba(255,107,61,0.4)] shrink-0 mb-1">C</div>
                   )}
-                  {msg.content}
-                  {msg.hasSuccess && (
-                    <div style={{
-                      marginTop: "8px",
-                      padding: "8px 12px",
-                      background: "#E8F8F0",
-                      border: "1px solid #A7E8C5",
-                      borderRadius: "8px",
-                      fontSize: "13px",
-                      color: "#2ECC71",
-                      fontWeight: "500"
-                    }}>
-                      ✓ {role === "CANDIDATE" ? "Profile data synchronized" : "Job listing active"}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+                  <div className={`max-w-[80%] rounded-2xl p-4 text-[15px] leading-relaxed relative ${
+                    msg.role === "user"
+                      ? "bg-orange/10 border border-orange/20 text-foreground rounded-br-sm"
+                      : "glass border border-white/10 text-foreground rounded-bl-sm"
+                  }`}>
+                    {msg.fileName && (
+                      <div className="flex items-center gap-2 px-3 py-2 bg-black/10 dark:bg-white/5 rounded-lg mb-2 text-[13px] font-semibold">
+                        <span>{msg.fileType?.startsWith("image/") ? "🖼️" : "📎"}</span>
+                        {msg.fileName}
+                      </div>
+                    )}
+                    <div className="whitespace-pre-wrap font-medium">{msg.content}</div>
+                    {msg.hasSuccess && (
+                      <div className="mt-3 px-3 py-2 bg-green-500/10 border border-green-500/20 rounded-lg text-[13px] text-green-500 font-bold flex items-center gap-2">
+                        ✓ {role === "CANDIDATE" ? "Profile data synchronized" : "Job listing active"}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
 
             {loading && !messages[messages.length - 1]?.isStreaming && (
-              <div style={{
-                display: "flex",
-                gap: "8px",
-                alignItems: "flex-start",
-                marginBottom: "16px"
-              }}>
-                <div style={{
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  background: "#FF6B3D",
-                  color: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "14px",
-                  fontWeight: "600"
-                }}>G</div>
-                <div style={{
-                  padding: "12px 16px",
-                  background: "#FFFFFF",
-                  border: "1px solid #EAEAEA",
-                  borderRadius: "16px 16px 16px 4px",
-                  color: "#999",
-                  fontSize: "14px"
-                }}>
-                  Claura is thinking...
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-end gap-3 justify-start"
+              >
+                <div className="w-8 h-8 rounded-full bg-[linear-gradient(135deg,#FF6B3D,#FF8C5A)] text-white flex items-center justify-center text-sm font-bold shadow-sm shrink-0 mb-1">C</div>
+                <div className="glass border border-white/10 rounded-2xl rounded-bl-sm px-4 py-3 text-sm text-subtle font-medium flex items-center gap-2">
+                  <div className="flex gap-1">
+                    <span className="w-1.5 h-1.5 bg-orange rounded-full animate-bounce delay-75"></span>
+                    <span className="w-1.5 h-1.5 bg-orange rounded-full animate-bounce delay-150"></span>
+                    <span className="w-1.5 h-1.5 bg-orange rounded-full animate-bounce delay-300"></span>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             )}
 
-            <div ref={bottomRef} />
+            <div ref={bottomRef} className="h-4" />
           </div>
         </div>
 
-        {/* ===== INPUT BAR (FIXED BOTTOM) ===== */}
-        <div style={{
-          position: "fixed",
-          bottom: 0,
-          right: 0,
-          left: "260px",
-          background: "#FFFFFF",
-          borderTop: "1px solid #E5E5E5",
-          padding: "16px 24px",
-          display: "flex",
-          gap: "12px",
-          alignItems: "center",
-          zIndex: 100
-        }}>
-          
-          <div style={{ flex: 1, position: "relative", maxWidth: "800px", margin: "0 auto" }}>
+        {/* ===== INPUT BAR (FLOATING PILL) ===== */}
+        <div className="absolute bottom-6 left-0 right-0 px-4 flex justify-center z-20">
+          <div className="w-full max-w-[800px] relative">
             {selectedFile && (
-              <div style={{
-                position: "absolute",
-                bottom: "calc(100% + 12px)",
-                left: 0,
-                background: "#FFFFFF",
-                border: "1px solid #EAEAEA",
-                borderRadius: "12px",
-                padding: "8px 16px",
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
-              }}>
+              <div className="absolute bottom-[calc(100%+12px)] left-0 glass border border-white/10 rounded-xl p-3 flex items-center gap-3 shadow-xl">
                 {previewUrl ? (
-                  <img src={previewUrl} alt="Preview" style={{ width: "32px", height: "32px", borderRadius: "4px", objectFit: "cover" }} />
+                  <img src={previewUrl} alt="Preview" className="w-10 h-10 rounded-lg object-cover" />
                 ) : (
-                  <div style={{ fontSize: "20px" }}>📎</div>
+                  <div className="text-2xl">📎</div>
                 )}
-                <div style={{ fontSize: "14px", fontWeight: "500", color: "#1F1F1F", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {selectedFile.name}
-                </div>
+                <div className="text-sm font-bold text-foreground max-w-[200px] truncate">{selectedFile.name}</div>
                 <button 
                   onClick={() => { setSelectedFile(null); setPreviewUrl(null); }}
-                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: "#999", padding: "4px" }}
+                  className="text-muted hover:text-red-500 transition-colors p-1"
                 >
                   ✕
                 </button>
@@ -555,44 +401,13 @@ export default function ChatPage({ params }: { params: { id: string } }) {
             
             <form
               onSubmit={handleSend}
-              style={{
-                display: "flex",
-                gap: "12px",
-                alignItems: "center",
-                width: "100%"
-              }}
+              className="glass border border-white/10 rounded-full p-2 flex items-center gap-2 shadow-[0_8px_32px_rgba(0,0,0,0.1)] focus-within:border-orange/50 focus-within:shadow-[0_0_20px_rgba(255,107,61,0.2)] transition-all duration-300"
             >
-            <input
-              ref={inputRef}
-              autoFocus
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder="Message Claura..."
-              disabled={loading}
-              style={{
-                flex: 1,
-                padding: "12px 20px",
-                borderRadius: "24px",
-                border: "1px solid #E5E5E5",
-                fontSize: "15px",
-                outline: "none",
-                background: "#F7F6F3",
-                color: "#1F1F1F"
-              }}
-            />
-            
-            <div style={{ display: "flex", gap: "8px" }}>
               <input 
                 id="doc-upload-input"
                 type="file" 
                 ref={attachmentRef} 
-                style={{ display: "none" }} 
+                className="hidden" 
                 accept=".pdf,.doc,.docx" 
                 onChange={handleFileSelect} 
               />
@@ -600,79 +415,60 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                 id="image-upload-input"
                 type="file" 
                 ref={imageRef} 
-                style={{ display: "none" }} 
+                className="hidden" 
                 accept="image/jpeg,image/png,image/webp" 
                 onChange={handleFileSelect} 
               />
               
-              <button
-                type="button"
-                onClick={() => attachmentRef.current?.click()}
-                disabled={loading}
-                title="Attach Document (PDF/DOC)"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  background: "transparent",
-                  border: "1px solid #EAEAEA",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "16px",
-                  color: "#666",
-                  transition: "background 200ms"
+              <div className="flex gap-1 pl-2">
+                <button
+                  type="button"
+                  onClick={() => attachmentRef.current?.click()}
+                  disabled={loading}
+                  className="p-2 text-muted hover:text-orange transition-colors rounded-full hover:bg-orange/5"
+                  title="Attach Document"
+                >
+                  📎
+                </button>
+                <button
+                  type="button"
+                  onClick={() => imageRef.current?.click()}
+                  disabled={loading}
+                  className="p-2 text-muted hover:text-orange transition-colors rounded-full hover:bg-orange/5"
+                  title="Attach Image"
+                >
+                  🖼️
+                </button>
+              </div>
+
+              <input
+                ref={inputRef}
+                autoFocus
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
                 }}
-              >
-                📎
-              </button>
+                placeholder="Message Claura..."
+                disabled={loading}
+                className="flex-1 bg-transparent outline-none text-[15px] font-medium text-foreground px-2 placeholder:text-muted"
+              />
               
               <button
-                type="button"
-                onClick={() => imageRef.current?.click()}
-                disabled={loading}
-                title="Attach Image (JPG/PNG)"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  background: "transparent",
-                  border: "1px solid #EAEAEA",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "16px",
-                  color: "#666",
-                  transition: "background 200ms"
-                }}
+                type="submit"
+                disabled={(!input.trim() && !selectedFile) || loading}
+                className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-all duration-300 ${
+                  (input.trim() || selectedFile) 
+                    ? "bg-orange text-white shadow-[0_4px_12px_rgba(255,107,61,0.4)] hover:scale-105" 
+                    : "bg-black/5 dark:bg-white/5 text-muted cursor-not-allowed"
+                }`}
               >
-                🖼️
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
               </button>
-            </div>
-
-            <button
-              type="submit"
-              disabled={(!input.trim() && !selectedFile) || loading}
-              style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "50%",
-                background: (input.trim() || selectedFile) ? "#FF6B3D" : "#E5E5E5",
-                border: "none",
-                cursor: (input.trim() || selectedFile) ? "pointer" : "default",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "18px",
-                color: "white",
-                transition: "background 200ms"
-              }}
-            >
-              →
-            </button>
-          </form>
+            </form>
           </div>
         </div>
       </div>

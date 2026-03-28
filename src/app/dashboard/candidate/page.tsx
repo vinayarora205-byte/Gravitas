@@ -4,8 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import Card from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
+import { Briefcase, Users, CheckCircle, Diamond } from "@/components/ui/ClientIcons";
 
 export default async function CandidateDashboard() {
   const { userId } = auth();
@@ -38,37 +37,52 @@ export default async function CandidateDashboard() {
     <div className="fade-in">
       <div className="flex justify-between items-end mb-8 fade-slide-up">
         <div>
-          <h1 className="text-h2 text-foreground font-semibold mb-2">Welcome, {profile.full_name || 'Candidate'}</h1>
-          <p className="text-muted text-body">Manage your gravity matches and opportunities.</p>
+          <h1 className="text-[32px] font-extrabold italic tracking-tight text-foreground mb-1">Welcome, {profile.full_name || 'Candidate'}</h1>
+          <p className="text-muted text-sm font-medium">Manage your gravity matches and opportunities.</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="px-4 py-2 rounded-xl bg-accent/10 text-accent font-bold text-sm border border-accent/20">
-            💎 {profile.hiries_balance || 0} Hiries
+          <span className="glass px-4 py-2 rounded-xl text-orange font-bold text-sm border border-orange/20 flex items-center gap-2">
+            <Diamond size={18} weight="duotone" /> {profile.hiries_balance || 0} Hiries
           </span>
-          <a href="/pricing" className="text-xs text-muted hover:text-accent underline">Need more?</a>
+          <a href="/pricing" className="text-xs text-orange font-bold hover:underline">Need more?</a>
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <Card className="fade-slide-up" style={{ animationDelay: '50ms' }}>
-           <h3 className="text-subtle text-small font-medium uppercase tracking-wider mb-2">Target Title</h3>
-           <div className="text-body-lg font-medium text-foreground truncate ">{candProfile?.job_title || 'Not set'}</div>
-        </Card>
-        <Card className="fade-slide-up" style={{ animationDelay: '100ms' }}>
-           <h3 className="text-subtle text-small font-medium uppercase tracking-wider mb-2">Matches Found</h3>
-           <div className="text-h2 font-semibold text-foreground">{matchesCount || 0}</div>
-        </Card>
-        <Card className="fade-slide-up" style={{ animationDelay: '150ms' }}>
-           <h3 className="text-subtle text-small font-medium uppercase tracking-wider mb-2">Visibility</h3>
-           <div className="mt-2"><Badge variant={candProfile ? "success" : "warning"}>{candProfile ? "Active" : "Incomplete"}</Badge></div>
-        </Card>
+        <div className="glass p-6 rounded-[20px] border-t-4 border-t-orange relative overflow-hidden group hover:bg-white/5 transition-colors fade-slide-up" style={{ animationDelay: '50ms' }}>
+          <div className="absolute top-6 right-6 p-2 bg-orange/10 rounded-xl">
+            <Briefcase className="text-orange" size={24} weight="duotone" />
+          </div>
+          <h3 className="text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Target Title</h3>
+          <div className="text-[24px] font-extrabold text-foreground truncate">{candProfile?.job_title || 'Not set'}</div>
+        </div>
+        
+        <div className="glass p-6 rounded-[20px] border-t-4 border-t-orange relative overflow-hidden group hover:bg-white/5 transition-colors fade-slide-up" style={{ animationDelay: '100ms' }}>
+          <div className="absolute top-6 right-6 p-2 bg-orange/10 rounded-xl">
+            <Users className="text-orange" size={24} weight="duotone" />
+          </div>
+          <h3 className="text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Matches Found</h3>
+          <div className="text-[36px] font-extrabold text-gradient mb-2">{matchesCount || 0}</div>
+        </div>
+
+        <div className="glass p-6 rounded-[20px] border-t-4 border-t-orange relative overflow-hidden group hover:bg-white/5 transition-colors fade-slide-up" style={{ animationDelay: '150ms' }}>
+          <div className="absolute top-6 right-6 p-2 bg-orange/10 rounded-xl">
+            <CheckCircle className="text-orange" size={24} weight="duotone" />
+          </div>
+          <h3 className="text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Visibility</h3>
+          <div className="mt-4">
+            <span className={`px-3 py-1 rounded-full text-sm font-bold border ${candProfile ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'}`}>
+              {candProfile ? "Active" : "Incomplete"}
+            </span>
+          </div>
+        </div>
       </div>
 
-      <h2 className="text-h3 text-foreground font-medium mb-6 fade-slide-up" style={{ animationDelay: '200ms' }}>
+      <h2 className="text-xl font-bold italic tracking-tight text-foreground mb-6 fade-slide-up" style={{ animationDelay: '200ms' }}>
         Opportunities
       </h2>
       
-      <div className="bg-card border border-border rounded-2xl overflow-hidden fade-slide-up shadow-sm" style={{ animationDelay: '250ms' }}>
+      <div className="glass border border-white/10 rounded-2xl overflow-hidden fade-slide-up shadow-sm" style={{ animationDelay: '250ms' }}>
         {(!matches || matches.length === 0) ? (
            <div className="p-12 text-center text-muted text-body flex flex-col items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mb-4 text-border" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -78,12 +92,12 @@ export default async function CandidateDashboard() {
           </div>
         ) : (
           <table className="w-full text-left border-collapse">
-            <thead className="bg-black/5 dark:bg-white/5 text-subtle text-xs uppercase tracking-wider font-medium">
+            <thead className="bg-white/5 text-muted text-xs uppercase tracking-wider font-bold">
               <tr>
-                <th className="p-4 border-b border-border">Company</th>
-                <th className="p-4 border-b border-border">Role</th>
-                <th className="p-4 border-b border-border">Match Score</th>
-                <th className="p-4 border-b border-border">Status</th>
+                <th className="p-5 border-b border-white/10">Company</th>
+                <th className="p-5 border-b border-white/10">Role</th>
+                <th className="p-5 border-b border-white/10">Match Score</th>
+                <th className="p-5 border-b border-white/10">Status</th>
               </tr>
             </thead>
             <tbody className="text-body text-foreground">
@@ -92,16 +106,20 @@ export default async function CandidateDashboard() {
                 // If score is 0-1, multiply by 100. If it's already 0-100, use as is.
                 const score = match.score <= 1 ? Math.round(match.score * 100) : Math.round(match.score);
                 return (
-                  <tr key={match.id} className="border-b border-border hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-                    <td className="p-4 font-medium">{job?.company_name || 'Classified'}</td>
-                    <td className="p-4 text-muted">{job?.job_title}</td>
-                    <td className="p-4">
-                      <span className="text-accent font-medium">{score}%</span>
+                  <tr key={match.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td className="p-5 font-bold">{job?.company_name || 'Classified'}</td>
+                    <td className="p-5 text-muted font-medium">{job?.job_title}</td>
+                    <td className="p-5">
+                      <span className="text-orange font-bold px-2 py-1 bg-orange/10 rounded-md border border-orange/20">{score}%</span>
                     </td>
-                    <td className="p-4">
-                      <Badge variant={match.status === 'ACCEPTED' ? 'success' : match.status === 'REJECTED' ? 'error' : 'warning'}>
+                    <td className="p-5">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                        match.status === 'ACCEPTED' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
+                        match.status === 'REJECTED' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
+                        'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                      }`}>
                         {match.status}
-                      </Badge>
+                      </span>
                     </td>
                   </tr>
                 );

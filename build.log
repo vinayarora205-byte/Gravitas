@@ -1,0 +1,45 @@
+
+> clauhire@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+
+./src/app/direct-chat/[match_id]/page.tsx
+53:6  Warning: React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/dashboard/Header.tsx
+10:34  Warning: 'role' is defined but never used.  @typescript-eslint/no-unused-vars
+33:15  Warning: 'e' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/dashboard/Sidebar.tsx
+112:28  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/messages/MessagesPage.tsx
+6:10  Warning: 'useRouter' is defined but never used.  @typescript-eslint/no-unused-vars
+192:34  Warning: '_error' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+   Collecting page data ...
+TypeError: (0 , d.createContext) is not a function
+    at 84884 (C:\Users\PC\MVP\gravitas\.next\server\app\dashboard\candidate\page.js:1:2567)
+    at t (C:\Users\PC\MVP\gravitas\.next\server\webpack-runtime.js:1:128)
+    at 95610 (C:\Users\PC\MVP\gravitas\.next\server\app\dashboard\candidate\page.js:1:836)
+    at t (C:\Users\PC\MVP\gravitas\.next\server\webpack-runtime.js:1:128)
+    at t (C:\Users\PC\MVP\gravitas\.next\server\app\dashboard\candidate\page.js:1:19338)
+    at C:\Users\PC\MVP\gravitas\.next\server\app\dashboard\candidate\page.js:1:19411
+    at t.X (C:\Users\PC\MVP\gravitas\.next\server\webpack-runtime.js:1:1206)
+    at C:\Users\PC\MVP\gravitas\.next\server\app\dashboard\candidate\page.js:1:19351
+    at Object.<anonymous> (C:\Users\PC\MVP\gravitas\.next\server\app\dashboard\candidate\page.js:1:19439)
+    at Module._compile (node:internal/modules/cjs/loader:1831:14)
+
+> Build error occurred
+Error: Failed to collect page data for /dashboard/candidate
+    at C:\Users\PC\MVP\gravitas\node_modules\next\dist\build\utils.js:1269:15
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  type: 'Error'
+}

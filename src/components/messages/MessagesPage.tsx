@@ -206,55 +206,57 @@ export default function MessagesPage() {
 
   if (loading && !selectedMatch) {
     return (
-      <div className="flex items-center justify-center h-full bg-[#1A1A1A] text-white">
-        <p>Loading messages...</p>
+      <div className="flex items-center justify-center h-full">
+        <div className="w-8 h-8 rounded-full border-4 border-orange border-t-transparent animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-[#1A1A1A] overflow-hidden">
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden m-[-24px] lg:m-[-40px]">
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,107,61,0.03),rgba(255,209,102,0.02))] z-[-1]" />
+      
       {/* Left Column — Conversation List */}
-      <div className="w-[320px] border-r border-[#2A2A2A] flex flex-col bg-[#111]">
-        <div className="p-6 border-b border-[#2A2A2A]">
-          <h1 className="text-xl font-bold text-white">Messages</h1>
+      <div className="w-[320px] glass border-r border-white/10 flex flex-col shrink-0 z-10">
+        <div className="p-6 border-b border-white/5">
+          <h1 className="text-xl font-extrabold text-foreground italic tracking-tight">Messages</h1>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-hide">
           {matches.length === 0 ? (
-            <div className="p-10 text-center text-gray-500">
-              <p className="text-3xl mb-2">💬</p>
-              <p className="text-sm">No matches yet. Accept a match to start chatting!</p>
+            <div className="p-8 text-center text-muted flex flex-col items-center">
+              <span className="text-3xl mb-3 opacity-50">💬</span>
+              <p className="text-sm font-medium leading-relaxed">No matches yet. Accept a match to start chatting!</p>
             </div>
           ) : (
             matches.map((m) => (
               <div
                 key={m.id}
                 onClick={() => selectChat(m)}
-                className={`p-4 cursor-pointer transition-colors border-l-4 ${
+                className={`p-4 rounded-2xl cursor-pointer transition-all duration-300 mb-2 border ${
                   selectedMatch?.id === m.id
-                    ? "bg-[#222] border-[#FF6B3D]"
-                    : "hover:bg-[#1A1A1A] border-transparent"
+                    ? "bg-[linear-gradient(135deg,rgba(255,107,61,0.1),rgba(255,209,102,0.05))] border-orange/30 shadow-sm"
+                    : "hover:bg-white/5 border-transparent"
                 }`}
               >
-                <div className="flex justify-between items-start mb-1">
-                  <h3 className="font-semibold text-white text-sm truncate w-[160px]">
+                <div className="flex justify-between items-start mb-1.5">
+                  <h3 className={`font-bold text-sm truncate w-[160px] ${selectedMatch?.id === m.id ? 'text-foreground' : 'text-foreground'}`}>
                     {profile?.role === "recruiter" ? m.candidate_name : m.recruiter_name}
                   </h3>
                   {m.last_message_time && (
-                    <span className="text-[10px] text-gray-500">
+                    <span className="text-[10px] font-semibold text-muted">
                       {new Date(m.last_message_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-orange-500 font-medium truncate mb-1">
-                  {profile?.role === "recruiter" ? m.job_title : m.company_name}
+                <p className="text-[11px] text-orange font-bold truncate mb-2 uppercase tracking-wide flex items-center gap-1">
+                  <span>💼</span> {profile?.role === "recruiter" ? m.job_title : m.company_name}
                 </p>
-                <div className="flex justify-between items-center">
-                  <p className="text-[11px] text-gray-400 truncate w-[200px]">
+                <div className="flex justify-between items-center gap-2">
+                  <p className="text-xs text-muted truncate flex-1 font-medium">
                     {m.last_message}
                   </p>
                   {(m.unread_count ?? 0) > 0 && (
-                    <span className="bg-[#FF6B3D] text-white text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
+                    <span className="bg-orange text-white text-[10px] font-bold h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center shadow-[0_0_8px_rgba(255,107,61,0.6)] shrink-0">
                       {m.unread_count}
                     </span>
                   )}
@@ -266,41 +268,45 @@ export default function MessagesPage() {
       </div>
 
       {/* Right Column — Chat Window */}
-      <div className="flex-1 flex flex-col relative bg-[#1A1A1A]">
+      <div className="flex-1 flex flex-col relative z-0">
         {!selectedMatch ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
-            <div className="text-6xl mb-4 text-[#2A2A2A]">💬</div>
-            <p className="text-lg">Select a conversation to start messaging</p>
+          <div className="flex-1 flex flex-col items-center justify-center text-muted">
+            <div className="w-16 h-16 rounded-full glass mb-4 flex items-center justify-center shadow-lg border border-white/10 text-2xl">
+              💬
+            </div>
+            <p className="text-[15px] font-semibold">Select a conversation to start messaging</p>
           </div>
         ) : (
           <>
             {/* Chat Header */}
-            <div className="h-16 border-b border-[#2A2A2A] bg-[#222] flex items-center px-6 gap-4">
-              <div className="w-10 h-10 rounded-full bg-[#FF6B3D] flex items-center justify-center font-bold text-white">
+            <div className="h-[72px] glass border-b border-white/10 flex items-center px-6 gap-4 shrink-0 shadow-sm z-20">
+              <div className="w-11 h-11 rounded-full bg-[linear-gradient(135deg,#FF6B3D,#FF8C5A)] flex items-center justify-center font-bold text-white shadow-[0_0_10px_rgba(255,107,61,0.4)] text-lg">
                 {(profile?.role === "recruiter" ? selectedMatch.candidate_name : selectedMatch.recruiter_name)?.[0]?.toUpperCase()}
               </div>
-              <div>
-                <h2 className="text-sm font-bold text-white">
+              <div className="flex-1">
+                <h2 className="text-base font-extrabold text-foreground italic tracking-tight">
                   {profile?.role === "recruiter" ? selectedMatch.candidate_name : selectedMatch.recruiter_name}
                 </h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-gray-400">
+                <div className="flex items-center gap-3 mt-0.5">
+                  <span className="text-[11px] font-semibold text-muted flex items-center gap-1 uppercase tracking-wider">
                     {profile?.role === "recruiter" ? selectedMatch.job_title : selectedMatch.company_name}
                   </span>
-                  <span className="text-[10px] text-green-500 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                    Connected
+                  <span className="w-1 h-1 rounded-full bg-white/20"></span>
+                  <span className="text-[11px] text-green-500 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]"></span>
+                    Online
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-3 pb-32">
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 pb-32">
               {messages.length === 0 && (
-                <div className="text-center py-10 text-gray-500">
-                  <span className="text-2xl">👋</span>
-                  <p className="text-sm mt-2">Chat unlocked! Say hello to {profile?.role === "recruiter" ? selectedMatch?.candidate_name : selectedMatch?.recruiter_name}</p>
+                <div className="text-center py-12 text-muted max-w-sm mx-auto">
+                  <div className="w-16 h-16 rounded-full glass mx-auto mb-4 flex items-center justify-center shadow-lg border border-white/10 text-2xl">👋</div>
+                  <p className="text-sm font-semibold">Chat unlocked!</p>
+                  <p className="text-xs mt-1">Say hello to {profile?.role === "recruiter" ? selectedMatch?.candidate_name : selectedMatch?.recruiter_name}</p>
                 </div>
               )}
               {messages.map((msg: Message, i) => {
@@ -308,31 +314,31 @@ export default function MessagesPage() {
                 return (
                   <div key={i} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                     <div
-                      className={`max-w-[70%] px-4 py-3 rounded-2xl relative ${
+                      className={`max-w-[75%] px-4 py-3 rounded-2xl relative shadow-sm ${
                         isMe
-                          ? "bg-[#FF6B3D] text-white rounded-br-none"
-                          : "bg-[#2A2A2A] text-gray-100 rounded-bl-none"
+                          ? "bg-orange/10 border border-orange/20 text-foreground rounded-br-sm"
+                          : "glass border border-white/10 text-foreground rounded-bl-sm"
                       }`}
                     >
                       {!isMe && (
-                        <p className="text-[10px] font-bold text-orange-400 mb-1">
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-orange mb-1">
                           {Array.isArray(msg.profiles) ? (msg.profiles[0] as any)?.full_name : (msg.profiles as any)?.full_name}
                         </p>
                       )}
-                      <p className="text-sm leading-relaxed">{msg.content}</p>
-                      <p className={`text-[9px] mt-1 ${isMe ? "text-orange-200" : "text-gray-500"} text-right`}>
+                      <p className="text-[14px] leading-relaxed font-medium">{msg.content}</p>
+                      <p className={`text-[10px] mt-2 font-semibold ${isMe ? "text-orange/60" : "text-muted"} text-right`}>
                         {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                   </div>
                 );
               })}
-              <div ref={bottomRef} />
+              <div ref={bottomRef} className="h-4" />
             </div>
 
             {/* Chat Input */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#1A1A1A] via-[#1A1A1A] to-transparent">
-              <div className="flex gap-3 bg-[#222] p-2 rounded-2xl border border-[#333] shadow-xl">
+            <div className="absolute bottom-6 left-0 right-0 px-6 z-20">
+              <div className="max-w-[800px] mx-auto relative glass border border-white/10 rounded-full p-2 flex items-center gap-2 shadow-[0_8px_32px_rgba(0,0,0,0.1)] focus-within:border-orange/50 focus-within:shadow-[0_0_20px_rgba(255,107,61,0.2)] transition-all duration-300">
                 <input
                   ref={inputRef}
                   value={input}
@@ -345,16 +351,18 @@ export default function MessagesPage() {
                   }}
                   autoFocus
                   placeholder={`Message ${profile?.role === "recruiter" ? selectedMatch.candidate_name : selectedMatch.recruiter_name}...`}
-                  className="flex-1 bg-transparent border-none outline-none text-white px-4 py-2 text-sm"
+                  className="flex-1 bg-transparent border-none outline-none text-foreground px-4 py-2 text-[15px] font-medium placeholder:text-muted"
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!input.trim()}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                    input.trim() ? "bg-[#FF6B3D] text-white" : "bg-[#2A2A2A] text-gray-600"
+                  className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
+                    input.trim() 
+                      ? "bg-orange text-white shadow-[0_4px_12px_rgba(255,107,61,0.4)] hover:scale-105" 
+                      : "bg-black/5 dark:bg-white/5 text-muted cursor-not-allowed"
                   }`}
                 >
-                  <span className="text-xl">→</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
               </div>
             </div>

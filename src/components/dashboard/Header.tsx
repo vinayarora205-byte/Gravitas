@@ -1,18 +1,15 @@
-/* eslint-disable */
-// @ts-nocheck
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
-import { Bell, Sun, Moon } from "lucide-react";
+import { Bell, MagnifyingGlass, List } from "@phosphor-icons/react";
 import { UserButton, useUser } from "@clerk/nextjs";
-import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Header({ role }: { role?: string }) {
   const { user } = useUser();
-  const { theme, setTheme } = useTheme();
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -47,68 +44,71 @@ export default function Header({ role }: { role?: string }) {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
   };
 
+  const formattedPath = pathname
+    .split("/")
+    .pop()
+    ?.replace(/-/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase()) || "Dashboard";
+
   return (
-    <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6 shrink-0 relative z-50">
-      <div className="flex items-center gap-3">
-        <Link href="/" className="font-bold text-xl tracking-tight text-foreground flex items-center gap-2">
-          Clauhire
-        </Link>
-        {role && (
-          <span className="hidden sm:inline-flex px-2.5 py-1 bg-black/5 dark:bg-white/5 text-muted text-xs font-medium rounded-full ml-4">
-            {role}
-          </span>
-        )}
+    <header className="h-16 glass border-b border-white/10 flex items-center justify-between px-6 shrink-0 relative z-40">
+      <div className="flex items-center gap-4">
+        <button className="md:hidden p-2 text-muted hover:text-orange transition-colors">
+          <List size={24} weight="duotone" />
+        </button>
+        <h1 className="hidden sm:block text-lg font-bold italic text-foreground tracking-tight">
+          {formattedPath === 'Recruiter' || formattedPath === 'Candidate' ? 'Dashboard' : formattedPath}
+        </h1>
       </div>
 
-      <div className="flex items-center gap-4">
-        {mounted && (
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="p-2 text-muted hover:text-foreground transition-colors rounded-full hover:bg-black/5 dark:hover:bg-white/5"
-          >
-            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-        )}
+      <div className="flex items-center gap-3">
+        <button className="p-2.5 rounded-full glass border border-white/10 text-muted hover:text-orange hover:bg-orange/5 transition-colors">
+          <MagnifyingGlass size={20} weight="duotone" />
+        </button>
 
         <div className="relative">
           <button 
             onClick={() => setShowDropdown(!showDropdown)}
-            className="p-2 text-muted hover:text-foreground transition-colors relative rounded-full hover:bg-black/5 dark:hover:bg-white/5"
+            className="p-2.5 rounded-[12px] glass border border-white/10 text-muted hover:text-orange hover:bg-orange/5 transition-colors relative"
           >
-             <Bell className="w-5 h-5" />
+             <Bell size={20} weight="duotone" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full border border-card" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange rounded-full shadow-[0_0_8px_rgba(255,107,61,0.8)]" />
             )}
           </button>
           
           <AnimatePresence>
-            {showDropdown && (
+            {showDropdown && mounted && (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95, y: -8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -8 }}
                 transition={{ duration: 0.12, ease: "easeOut" }}
-                className="absolute right-0 mt-2 w-80 bg-card border border-border shadow-lg rounded-2xl max-h-96 overflow-y-auto z-50 overflow-hidden"
+                className="absolute right-0 mt-3 w-80 glass bg-card/90 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-2xl max-h-96 overflow-y-auto z-50 overflow-hidden"
               >
-                <div className="p-3 border-b border-border font-medium text-foreground text-sm">
-                  Notifications {unreadCount > 0 && <span className="text-accent ml-1">({unreadCount})</span>}
+                <div className="p-4 border-b border-white/10 font-bold text-foreground text-sm flex justify-between items-center">
+                  <span>Notifications</span>
+                  {unreadCount > 0 && <span className="bg-orange/20 text-orange px-2 py-0.5 rounded-full text-xs">{unreadCount} New</span>}
                 </div>
                 {notifications.length === 0 ? (
-                  <div className="p-4 text-center text-muted text-sm">No new notifications</div>
+                  <div className="p-6 text-center text-muted text-sm flex flex-col items-center gap-2">
+                    <Bell size={24} className="text-white/10" />
+                    No new notifications
+                  </div>
                 ) : (
                   <div className="py-1">
                     {notifications.map(n => (
                       <div 
                         key={n.id} 
                         onClick={() => markAsRead(n.id)}
-                        className={`px-4 py-3 border-b border-border/50 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${!n.is_read ? 'bg-accent/5' : ''}`}
+                        className={`px-4 py-3 border-b border-white/5 cursor-pointer hover:bg-orange/5 transition-colors ${!n.is_read ? 'bg-[linear-gradient(135deg,rgba(255,107,61,0.05),rgba(255,209,102,0.05))]' : ''}`}
                       >
                         <div className="flex justify-between items-start mb-1">
-                          <span className={`text-xs font-medium ${!n.is_read ? 'text-accent' : 'text-subtle'}`}>{n.type}</span>
-                          {!n.is_read && <span className="w-2 h-2 rounded-full bg-accent mt-1 shrink-0"></span>}
+                          <span className={`text-[10px] font-bold uppercase tracking-wider ${!n.is_read ? 'text-orange' : 'text-muted'}`}>{n.type}</span>
+                          {!n.is_read && <span className="w-1.5 h-1.5 rounded-full bg-orange mt-1 shrink-0 shadow-[0_0_4px_rgba(255,107,61,0.6)]"></span>}
                         </div>
-                        <p className="font-medium text-foreground text-sm leading-tight mb-1">{n.title}</p>
-                        <p className="text-subtle text-xs leading-relaxed">{n.message}</p>
+                        <p className="font-semibold text-foreground text-sm leading-tight mb-1">{n.title}</p>
+                        <p className="text-muted text-xs leading-relaxed">{n.message}</p>
                       </div>
                     ))}
                   </div>
@@ -118,8 +118,10 @@ export default function Header({ role }: { role?: string }) {
           </AnimatePresence>
         </div>
         
-        <div className="ml-2 pl-4 border-l border-border flex items-center">
-           <UserButton afterSignOutUrl="/" appearance={{ elements: { userButtonAvatarBox: "w-8 h-8" } }} />
+        <div className="ml-2 pl-4 border-l border-white/10 flex items-center">
+           <div className="p-0.5 rounded-full border-2 border-orange/40">
+             <UserButton afterSignOutUrl="/" appearance={{ elements: { userButtonAvatarBox: "w-8 h-8 rounded-full" } }} />
+           </div>
         </div>
       </div>
     </header>

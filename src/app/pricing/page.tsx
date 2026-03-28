@@ -87,7 +87,7 @@ export default function PricingPage() {
             }}>
               💬 WhatsApp
             </a>
-            <a href="mailto:support@gravitas.ai" style={{
+            <a href="mailto:support@clauhire.ai" style={{
               padding: "12px 24px", borderRadius: "10px", background: "#FF6B3D", color: "#fff",
               textDecoration: "none", fontWeight: "600", fontSize: "14px",
             }}>

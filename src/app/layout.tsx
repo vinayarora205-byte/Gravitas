@@ -1,17 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "next-themes";
 
-const inter = Inter({ 
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
-
-
 export const metadata: Metadata = {
-  title: "Clauhire | The Recruitment Operating System",
+  title: "Clauhire | Where Talent Meets Opportunity",
   description: "Advanced AI-powered talent acquisition platform.",
 };
 
@@ -45,11 +38,9 @@ export default function RootLayout({
         }
       }}
     >
-      <html lang="en" suppressHydrationWarning>
-        <body className={`${inter.className} ${inter.variable} font-sans`}>
-
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-
+      <html lang="en" suppressHydrationWarning className="dark">
+        <body className="font-sans antialiased text-foreground bg-background">
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
             {children}
           </ThemeProvider>
         </body>
