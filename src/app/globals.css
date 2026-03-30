@@ -8,27 +8,93 @@
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Inter', sans-serif;
+html, body {
   background: #F6F1EB;
   color: #0F0F0F;
+  font-family: 'Inter', sans-serif;
   scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3 {
+h1, h2, h3, h4, h5, h6 {
   font-family: 'Playfair Display', serif;
 }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-thumb { 
-  background: #FF6A2A; 
-  border-radius: 10px; 
+/* ===== CSS ANIMATIONS (NO JS) ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-::selection { 
-  background: #FF6A2A30; 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-.orange { color: #FF6A2A; }
-.serif { font-family: 'Playfair Display', serif; }
-.sans { font-family: 'Inter', sans-serif; }
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40%           { transform: translateY(-6px); }
+}
+
+.fade-up {
+  animation: fadeUp 0.6s ease forwards;
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.fade-up-1 { animation: fadeUp 0.6s ease 0.1s forwards; opacity: 0; }
+.fade-up-2 { animation: fadeUp 0.6s ease 0.2s forwards; opacity: 0; }
+.fade-up-3 { animation: fadeUp 0.6s ease 0.3s forwards; opacity: 0; }
+.fade-up-4 { animation: fadeUp 0.6s ease 0.4s forwards; opacity: 0; }
+
+/* ===== BUTTON HOVER (CSS ONLY) ===== */
+button, .btn {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* ===== CARD HOVER ===== */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* ===== TYPING DOTS ===== */
+.dot-bounce {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #FF6A2A;
+  animation: dotBounce 0.9s infinite;
+}
+.dot-bounce:nth-child(2) { animation-delay: 0.16s; }
+.dot-bounce:nth-child(3) { animation-delay: 0.32s; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #E8E3DD; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #FF6A2A; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+::selection { background: rgba(255, 106, 42, 0.15); }
+
+/* ===== UTILITIES ===== */
+.orange  { color: #FF6A2A; }
+.serif   { font-family: 'Playfair Display', serif; }
+.sans    { font-family: 'Inter', sans-serif; }
+
+/* ===== BADGE COLORS ===== */
+.badge-pending  { background: #FFF3EE; color: #FF6A2A; }
+.badge-accepted { background: #E8F5E9; color: #2E7D32; }
+.badge-rejected { background: #FFEBEE; color: #C62828; }
+
+.badge-score-high { background: #E8F5E9; color: #2E7D32; }
+.badge-score-mid  { background: #FFF3EE; color: #FF6A2A; }
+.badge-score-low  { background: #FFEBEE; color: #C62828; }

@@ -1,133 +1,248 @@
-/* eslint-disable */
-// @ts-nocheck
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { Briefcase, Users, CheckCircle, Diamond } from "@/components/ui/ClientIcons";
+import { Briefcase, Users, CheckCircle, Target, ArrowRight, ChatCircle } from "@phosphor-icons/react";
 
-export default async function CandidateDashboard() {
- const { userId } = auth();
- if (!userId) redirect("/sign-in");
+const scoreStyle = (score: number) => {
+  if (score >= 80) return { background: "#E8F5E9", color: "#2E7D32" };
+  if (score >= 60) return { background: "#FFF3EE", color: "#FF6A2A" };
+  return { background: "#FFEBEE", color: "#C62828" };
+};
 
- const { data: profile, error: profileError } = await supabase
- .from("profiles")
- .select("*")
- .eq("clerk_user_id", userId)
- .maybeSingle();
+const statusStyle = (status: string) => {
+  if (status === "ACCEPTED") return { background: "#E8F5E9", color: "#2E7D32" };
+  if (status === "REJECTED") return { background: "#FFEBEE", color: "#C62828" };
+  return { background: "#FFF3EE", color: "#FF6A2A" };
+};
 
- if (profileError || !profile || profile.role?.toUpperCase() !== "CANDIDATE") {
- redirect("/role-select");
- }
+export default function CandidateDashboard() {
+  const { user, isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
 
- const { data: candProfile } = await supabase
- .from("candidate_profiles")
- .select("*")
- .eq("profile_id", profile.id)
- .maybeSingle();
+  const [profile, setProfile] = useState<any>(null);
+  const [candProfile, setCandProfile] = useState<any>(null);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
- // "Matches Found" = COUNT from matches WHERE candidate_id IN (SELECT id FROM candidate_profiles WHERE profile_id = current user profile id)
- const { data: matches, count: matchesCount } = await supabase
- .from("matches")
- .select("*, job_listings(*, profiles(company_website, full_name, name))", { count: 'exact' })
- .eq("candidate_id", profile.id) // This is equivalent to filtering by candidate_profiles.id if we use the right column, but candidate_id is the profile UUID in matches.
- .order("created_at", { ascending: false });
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) router.push("/sign-in");
+  }, [isLoaded, isSignedIn, router]);
 
- return (
- <div className="fade-in">
- <div className="flex justify-between items-end mb-8 fade-slide-up">
- <div>
- <h1 className="text-[32px] font-extrabold italic tracking-tight text-foreground mb-1">Welcome, {profile.full_name || 'Candidate'}</h1>
- <p className="text-muted text-sm font-medium">Manage your gravity matches and opportunities.</p>
- </div>
- <div className="flex items-center gap-3">
- <span className="glass px-4 py-2 rounded-xl text-orange font-bold text-sm border border-orange/20 flex items-center gap-2">
- <Diamond size={18} weight="duotone" /> {profile.hiries_balance || 0} Hiries
- </span>
- <a href="/pricing" className="text-xs text-orange font-bold hover:underline">Need more?</a>
- </div>
- </div>
- 
- <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
- <div className="glass p-6 rounded-[20px] border-t-4 border-t-orange relative overflow-hidden group hover:bg-white/5 transition-colors fade-slide-up" style={{ animationDelay: '50ms' }}>
- <div className="absolute top-6 right-6 p-2 bg-orange/10 rounded-xl">
- <Briefcase className="text-orange" size={24} weight="duotone" />
- </div>
- <h3 className="text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Target Title</h3>
- <div className="text-[24px] font-extrabold text-foreground truncate">{candProfile?.job_title || 'Not set'}</div>
- </div>
- 
- <div className="glass p-6 rounded-[20px] border-t-4 border-t-orange relative overflow-hidden group hover:bg-white/5 transition-colors fade-slide-up" style={{ animationDelay: '100ms' }}>
- <div className="absolute top-6 right-6 p-2 bg-orange/10 rounded-xl">
- <Users className="text-orange" size={24} weight="duotone" />
- </div>
- <h3 className="text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Matches Found</h3>
- <div className="text-[36px] font-extrabold text-gradient mb-2">{matchesCount || 0}</div>
- </div>
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      const { data: profileData, error } = await supabase
+        .from("profiles").select("*").eq("clerk_user_id", user.id).maybeSingle();
 
- <div className="glass p-6 rounded-[20px] border-t-4 border-t-orange relative overflow-hidden group hover:bg-white/5 transition-colors fade-slide-up" style={{ animationDelay: '150ms' }}>
- <div className="absolute top-6 right-6 p-2 bg-orange/10 rounded-xl">
- <CheckCircle className="text-orange" size={24} weight="duotone" />
- </div>
- <h3 className="text-[12px] font-bold text-muted uppercase tracking-wider mb-2">Visibility</h3>
- <div className="mt-4">
- <span className={`px-3 py-1 rounded-full text-sm font-bold border ${candProfile ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'}`}>
- {candProfile ? "Active" : "Incomplete"}
- </span>
- </div>
- </div>
- </div>
+      if (error || !profileData || profileData.role?.toUpperCase() !== "CANDIDATE") {
+        router.push("/role-select"); return;
+      }
+      setProfile(profileData);
 
- <h2 className="text-xl font-bold italic tracking-tight text-foreground mb-6 fade-slide-up" style={{ animationDelay: '200ms' }}>
- Opportunities
- </h2>
- 
- <div className="glass border border-white/10 rounded-2xl overflow-hidden fade-slide-up shadow-sm" style={{ animationDelay: '250ms' }}>
- {(!matches || matches.length === 0) ? (
- <div className="p-12 text-center text-muted text-body flex flex-col items-center">
- <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mb-4 text-border" fill="none" viewBox="0 0 24 24" stroke="currentColor">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
- </svg>
- No matches yet. Claura is scanning the market for you.
- </div>
- ) : (
- <table className="w-full text-left border-collapse">
- <thead className="bg-white/5 text-muted text-xs uppercase tracking-wider font-bold">
- <tr>
- <th className="p-5 border-b border-white/10">Company</th>
- <th className="p-5 border-b border-white/10">Role</th>
- <th className="p-5 border-b border-white/10">Match Score</th>
- <th className="p-5 border-b border-white/10">Status</th>
- </tr>
- </thead>
- <tbody className="text-body text-foreground">
- {matches.map((match) => {
- const job = match.job_listings as unknown as { company_name: string; job_title: string };
- // If score is 0-1, multiply by 100. If it's already 0-100, use as is.
- const score = match.score <= 1 ? Math.round(match.score * 100) : Math.round(match.score);
- return (
- <tr key={match.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
- <td className="p-5 font-bold">{job?.company_name || 'Classified'}</td>
- <td className="p-5 text-muted font-medium">{job?.job_title}</td>
- <td className="p-5">
- <span className="text-orange font-bold px-2 py-1 bg-orange/10 rounded-md border border-orange/20">{score}%</span>
- </td>
- <td className="p-5">
- <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
- match.status === 'ACCEPTED' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
- match.status === 'REJECTED' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
- 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
- }`}>
- {match.status}
- </span>
- </td>
- </tr>
- );
- })}
- </tbody>
- </table>
- )}
- </div>
- </div>
- );
+      const { data: cpData } = await supabase
+        .from("candidate_profiles").select("*").eq("profile_id", profileData.id).maybeSingle();
+      setCandProfile(cpData);
+
+      const { data: matchesData } = await supabase
+        .from("matches").select("*, job_listings(*)")
+        .eq("candidate_id", profileData.id).order("created_at", { ascending: false });
+      setMatches(matchesData || []);
+      setLoading(false);
+    };
+    if (isSignedIn) fetchData();
+  }, [user, isSignedIn, router]);
+
+  if (!isLoaded || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 rounded-full border-2 border-[#E8E3DD] border-t-[#FF6A2A] animate-spin" />
+      </div>
+    );
+  }
+
+  const stats = [
+    {
+      label: "Target Role",
+      value: candProfile?.job_title || "Not Set",
+      Icon: Target,
+      sub: "Your goal position",
+    },
+    {
+      label: "Total Matches",
+      value: matches.length,
+      Icon: Users,
+      sub: `${matches.filter(m => m.score >= 80).length} high-fidelity`,
+    },
+    {
+      label: "Profile Status",
+      value: candProfile ? "Active" : "Incomplete",
+      Icon: CheckCircle,
+      isStatus: true,
+      statusOk: !!candProfile,
+    },
+  ];
+
+  return (
+    <div className="space-y-8 font-sans max-w-[1100px]">
+
+      {/* Welcome header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest mb-3"
+            style={{ background: "#FFF3EE", color: "#FF6A2A" }}
+          >
+            <ChatCircle size={12} weight="fill" /> Candidate Portal
+          </div>
+          <h1 className="font-serif text-[32px] font-bold italic text-[#0F0F0F]">
+            Welcome back, {profile?.full_name?.split(" ")[0] || "Candidate"}
+          </h1>
+          <p className="text-[14px] text-gray-400 mt-1">Your career trajectory at a glance.</p>
+        </div>
+        <button
+          onClick={() => router.push("/chat")}
+          className="flex items-center gap-2 text-white text-[14px] font-medium px-5 py-3 rounded-[10px] shrink-0 hover:opacity-90 transition-opacity"
+          style={{ background: "#FF6A2A" }}
+        >
+          Chat with Claura <ArrowRight size={16} weight="bold" />
+        </button>
+      </div>
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {stats.map((s, i) => (
+          <div
+            key={i}
+            className="bg-white rounded-[16px] p-6"
+            style={{ border: "1px solid #E8E3DD" }}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div
+                className="text-[11px] font-bold uppercase tracking-widest text-gray-400"
+                style={{ letterSpacing: "0.08em" }}
+              >
+                {s.label}
+              </div>
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                style={{ background: "#FFF3EE" }}
+              >
+                <s.Icon size={18} weight="fill" color="#FF6A2A" />
+              </div>
+            </div>
+            {s.isStatus ? (
+              <div
+                className="text-[13px] font-bold px-3 py-1.5 rounded-full w-fit"
+                style={s.statusOk ? { background: "#E8F5E9", color: "#2E7D32" } : { background: "#FFF3EE", color: "#FF6A2A" }}
+              >
+                {s.value as string}
+              </div>
+            ) : (
+              <div className="font-serif text-[36px] font-bold text-[#FF6A2A] leading-none mb-1">{s.value}</div>
+            )}
+            <div className="text-[12px] text-gray-400 mt-2">{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Matches Table */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-serif text-[22px] font-bold italic text-[#0F0F0F]">Match Opportunities</h2>
+          <button
+            onClick={() => router.push("/dashboard/candidate/opportunities")}
+            className="text-[13px] font-medium text-[#FF6A2A] hover:underline"
+          >
+            View All →
+          </button>
+        </div>
+
+        <div
+          className="bg-white rounded-[16px] overflow-hidden"
+          style={{ border: "1px solid #E8E3DD" }}
+        >
+          {matches.length === 0 ? (
+            <div className="py-16 text-center flex flex-col items-center gap-4">
+              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "#F6F1EB" }}>
+                <Briefcase size={28} weight="duotone" color="#ccc" />
+              </div>
+              <div>
+                <p className="font-bold text-[#0F0F0F] text-[15px] mb-1">No matches yet</p>
+                <p className="text-[13px] text-gray-400">Talk to Claura to start getting matched with roles.</p>
+              </div>
+              <button
+                onClick={() => router.push("/chat")}
+                className="text-[13px] font-medium px-5 py-2 rounded-[8px] transition-colors"
+                style={{ border: "1px solid #E8E3DD", color: "#0F0F0F" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#F6F1EB")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              >
+                Open Claura Chat
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr style={{ background: "#F6F1EB" }}>
+                    {["Role", "Company", "Score", "Status"].map(h => (
+                      <th
+                        key={h}
+                        className="px-6 py-3 text-left text-[11px] font-bold uppercase tracking-widest text-gray-400"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {matches.slice(0, 6).map((match) => {
+                    const job = match.job_listings;
+                    const score = match.score <= 1 ? Math.round(match.score * 100) : Math.round(match.score);
+                    return (
+                      <tr
+                        key={match.id}
+                        className="cursor-pointer"
+                        style={{ borderBottom: "1px solid #F0EDE8" }}
+                        onClick={() => router.push("/dashboard/candidate/opportunities")}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#FAFAFA")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-[14px] text-[#0F0F0F]">{job?.job_title}</div>
+                          <div className="text-[12px] text-gray-400 mt-0.5">{job?.work_type}</div>
+                        </td>
+                        <td className="px-6 py-4 text-[14px] font-medium text-[#0F0F0F]">
+                          {job?.company_name || "—"}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className="text-[12px] font-bold px-2.5 py-1 rounded-[6px]"
+                            style={scoreStyle(score)}
+                          >
+                            {score}%
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className="text-[12px] font-bold px-2.5 py-1 rounded-[6px]"
+                            style={statusStyle(match.status)}
+                          >
+                            {match.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }

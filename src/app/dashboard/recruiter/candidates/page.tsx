@@ -6,10 +6,10 @@ import { supabase } from "@/lib/supabase";
 import Badge from "@/components/ui/Badge";
 
 const STAGES = [
- { key: "applied", label: "Applied", color: "default" as const },
- { key: "screening", label: "Screening", color: "warning" as const },
- { key: "interview", label: "Interview", color: "accent" as const },
- { key: "offer", label: "Offer", color: "success" as const },
+  { key: "applied", label: "Applied", color: "default" as const },
+  { key: "screening", label: "Screening", color: "warning" as const },
+  { key: "interview", label: "Interview", color: "primary" as const },
+  { key: "offer", label: "Offer", color: "success" as const },
 ];
 
 export default function CandidatesPipeline() {
