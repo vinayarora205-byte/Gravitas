@@ -11,9 +11,9 @@ const supabaseAdmin = createSupabaseAdmin(
 );
 
 export async function GET() {
- try {
- const { userId } = auth();
- if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const { userId } = await auth();
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
  const { data: profile } = await supabaseAdmin
  .from("profiles")

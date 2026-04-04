@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, use } from "react";
 import { useUser } from "@clerk/nextjs";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -24,7 +24,8 @@ interface Message {
   fileData?: string | null;
 }
 
-export default function ChatPage({ params }: { params: { id: string } }) {
+export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const { user } = useUser();
   const router = useRouter();
 
@@ -41,7 +42,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const attachmentRef = useRef<HTMLInputElement>(null);
 
-  const activeConvo = params.id;
+  const activeConvo = id;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

@@ -58,11 +58,11 @@ async function appendToChat(clerkUserId: string, message: string) {
 }
 
 export async function POST(req: Request) {
- try {
- console.log("=== ACCEPT MATCH CALLED ===");
+  try {
+    console.log("=== ACCEPT MATCH CALLED ===");
 
- const { userId } = auth();
- if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { userId } = await auth();
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
  const { match_id } = await req.json();
  if (!match_id) return NextResponse.json({ error: "Missing match_id" }, { status: 400 });

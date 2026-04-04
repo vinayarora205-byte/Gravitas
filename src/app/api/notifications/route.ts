@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function GET() {
- const { userId } = auth()
- if (!userId) return NextResponse.json({ notifications: [] })
+  const { userId } = await auth()
+  if (!userId) return NextResponse.json({ notifications: [] })
  const supabase = createClient()
  const { data: profile } = await supabase
  .from('profiles')

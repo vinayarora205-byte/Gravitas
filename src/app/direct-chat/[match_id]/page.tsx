@@ -1,45 +1,46 @@
 "use client"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, use } from "react"
 import { useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
 interface Profile {
- id: string;
- full_name: string;
- role: string;
+  id: string;
+  full_name: string;
+  role: string;
 }
 
 interface Match {
- id: string;
- chat_unlocked: boolean;
- job_listings?: {
- job_title: string;
- company_name: string;
- profiles: { full_name: string; email: string } | { full_name: string; email: string }[];
- };
- candidate_profiles?: {
- job_title: string;
- profiles: { full_name: string; email: string } | { full_name: string; email: string }[];
- }[];
+  id: string;
+  chat_unlocked: boolean;
+  job_listings?: {
+  job_title: string;
+  company_name: string;
+  profiles: { full_name: string; email: string } | { full_name: string; email: string }[];
+  };
+  candidate_profiles?: {
+  job_title: string;
+  profiles: { full_name: string; email: string } | { full_name: string; email: string }[];
+  }[];
 }
 
 interface Message {
- id: string;
- sender_id: string;
- content: string;
- created_at: string;
- profiles?: { full_name: string } | { full_name: string }[];
+  id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  profiles?: { full_name: string } | { full_name: string }[];
 }
 
 
 export default function DirectChatPage({ 
- params 
+  params 
 }: { 
- params: { match_id: string } 
+  params: Promise<{ match_id: string }> 
 }) {
- const { user } = useUser()
- const router = useRouter()
+  const { match_id } = use(params)
+  const { user } = useUser()
+  const router = useRouter()
  const [messages, setMessages] = useState<Message[]>([])
  const [input, setInput] = useState("")
  const [match, setMatch] = useState<Match | null>(null)
@@ -77,7 +78,7 @@ export default function DirectChatPage({
  profiles:profile_id(full_name, email)
  )
  `)
- .eq('id', params.match_id)
+ .eq('id', match_id)
  .single()
  
  // Fix candidate profiles join if needed
@@ -97,19 +98,19 @@ export default function DirectChatPage({
  const { data: msgs } = await supabase
  .from('direct_messages')
  .select('*, profiles:sender_id(full_name)')
- .eq('match_id', params.match_id)
+ .eq('match_id', match_id)
  .order('created_at', { ascending: true })
  setMessages(msgs || [])
  setLoading(false)
 
  // Subscribe to new messages
  supabase
- .channel('direct-' + params.match_id)
+ .channel('direct-' + match_id)
  .on('postgres_changes', {
  event: 'INSERT',
  schema: 'public',
  table: 'direct_messages',
- filter: 'match_id=eq.' + params.match_id
+ filter: 'match_id=eq.' + match_id
  }, async (payload) => {
  // Fetch full message with profile data
  const { data: newMsg } = await supabase
@@ -134,7 +135,7 @@ export default function DirectChatPage({
  setInput("")
  
  await supabase.from('direct_messages').insert({
- match_id: params.match_id,
+ match_id: match_id,
  sender_id: profile.id,
  content
  })

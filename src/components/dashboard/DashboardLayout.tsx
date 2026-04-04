@@ -9,8 +9,8 @@ interface LayoutProps {
   role: string;
 }
 
-export default function DashboardLayout({ children, role }: LayoutProps) {
-  const { userId } = auth();
+export default async function DashboardLayout({ children, role }: LayoutProps) {
+  const { userId } = await auth();
   if (!userId) redirect("/sign-in");
   
   return (

@@ -11,9 +11,9 @@ const supabaseAdmin = createSupabaseAdmin(
 );
 
 export async function POST(req: Request) {
- try {
- const { userId } = auth();
- if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const { userId } = await auth();
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
  const { match_id, response } = await req.json();
  if (!match_id || !response) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
