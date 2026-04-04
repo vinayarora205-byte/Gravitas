@@ -16,7 +16,7 @@ export default function AdminPage() {
  const [transactions, setTransactions] = useState<any[]>([]);
  const [loading, setLoading] = useState(false);
 
- const ADMIN_SECRET = "clauhire_admin_2024";
+ const ADMIN_SECRET = "clauhire@2025";
 
  const handleLogin = (e: React.FormEvent) => {
  e.preventDefault();
