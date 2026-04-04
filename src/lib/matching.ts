@@ -101,37 +101,7 @@ async function createNotification({ user_id, title, message, match_id }: any) {
  }
 }
 
-async function appendMatchMessageToChat(profileId: string, messageText: string) {
- try {
- const { data: convo } = await supabase
- .from("conversations")
- .select("id, messages")
- .eq("profile_id", profileId)
- .order("created_at", { ascending: false })
- .limit(1)
- .maybeSingle();
-
- if (convo) {
- const newMessage = {
- role: "assistant",
- content: messageText,
- timestamp: new Date().toISOString(),
- type: "match_notification"
- };
- const updatedMessages = [...(convo.messages || []), newMessage];
- const { error } = await supabase
- .from("conversations")
- .update({ messages: updatedMessages })
- .eq("id", convo.id);
- if (error) console.error("[Chat] Update error:", error);
- else console.log(`[Chat] Appended match message to conversation ${convo.id} for profile ${profileId}`);
- } else {
- console.warn(`[Chat] No conversation found for profile ${profileId}`);
- }
- } catch (e) {
- console.error("Failed to append match to chat", e);
- }
-}
+// appendMatchMessageToChat removed
 
 async function sendMatchEmails(job: any, candidate: any, score: number) {
  console.log("====== EMAIL NOTIFICATION ======");
@@ -269,31 +239,8 @@ export async function runMatchingForProfile(profileId: string, role: "CANDIDATE"
  match_id: match.id
  });
 
- // 2. Chat message for CANDIDATE
- const expYears = candidate.experience_years || 'Not specified';
- await appendMatchMessageToChat(
- candidate.profile_id,
- `⚡ Great news! Claura found a job match for you!\n\n` +
- `Company: ${job.company_name || 'Confidential'}\n` +
- `Role: ${job.job_title}\n` +
- `Salary: ₹${job.salary_min || '?'}-${job.salary_max || '?'}/month\n` +
- `Work Type: ${job.work_type || 'Not specified'}\n` +
- `Match Score: ${score}%\n\n` +
- `The recruiter has been notified. Are you interested in this opportunity?`
- );
-
- // 3. Chat message for RECRUITER
- await appendMatchMessageToChat(
- job.profile_id,
- `⚡ Claura found a matching candidate!\n\n` +
- `Name: ${candidate.profiles?.full_name || 'Anonymous'}\n` +
- `Role: ${candidate.job_title || 'Not specified'}\n` +
- `Skills: ${(candidate.skills || []).join(', ') || 'Not specified'}\n` +
- `Expected: ₹${candidate.salary_min || '?'}-${candidate.salary_max || '?'}/month\n` +
- `Experience: ${expYears} years\n` +
- `Match Score: ${score}%\n\n` +
- `Would you like to connect with this candidate?`
- );
+ // 2. Chat message for CANDIDATE (Removed)
+ // 3. Chat message for RECRUITER (Removed)
 
  // 4. Email notifications
  await sendMatchEmails(job, candidate, score);

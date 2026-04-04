@@ -39,7 +39,7 @@ Rules:
 - If salary seems low for their skills, suggest better range
 - Support Hindi and English naturally
 - After collecting everything, summarize their profile
-- End with: 'Your gravity profile is now live. We will pull matching opportunities to you automatically.'
+- End with: 'Your Clauhire profile is now live. We will pull matching opportunities to you automatically.'
 - Then wrap ALL extracted data in <PROFILE_DATA> tags as JSON:
 {
  "job_title": "...", "skills": ["..."], "experience_years": 0, "salary_min": 0, "salary_max": 0,
@@ -69,7 +69,7 @@ Rules:
 - Be professional and crisp
 - If budget seems below market rate, mention it politely
 - After collecting everything, confirm the job listing
-- End with: 'Your job is now live in the gravity field. We will surface the best matching candidates automatically.'
+- End with: 'Your job is now live in Clauhire. We will surface the best matching candidates automatically.'
 - Then wrap ALL extracted data in <JOB_DATA> tags as JSON:
 {
  "job_title": "...", "company_name": "...", "required_skills": ["..."], "min_experience": 0,
@@ -161,6 +161,8 @@ export async function processNewMatch(
  savedId: string, 
  role: 'CANDIDATE' | 'RECRUITER'
 ) {
+ console.log("=== PROCESS NEW MATCH ===")
+ console.log("Searching for matches...")
  const supabase = createClient()
  let matchesFound = []
  let notificationsCreated = 0
@@ -179,9 +181,12 @@ export async function processNewMatch(
  .select('*, profiles(id, clerk_user_id, email, full_name)')
  .eq('is_active', true)
  
+ console.log("Candidates found: 1");
+ console.log("Jobs found:", jobs?.length);
+
  for (const job of jobs || []) {
  const score = calculateScore(candidate, job)
- if (score < 60) continue
+ if (score < 50) continue
  
  // Save match
  const { data: match } = await supabaseAdmin.from('matches').insert({
@@ -216,30 +221,7 @@ export async function processNewMatch(
  })
  notificationsCreated++
  
- // Add to candidate chat
- await appendToChat(
- candidate.profiles.clerk_user_id,
- `⚡ Claura found a job match for you!\n\n` +
- `Company: ${job.company_name || 'Confidential'}\n` +
- `Role: ${job.job_title || 'Not specified'}\n` +
- `Salary: ₹${job.salary_min || '0'}-${job.salary_max || '0'}/month\n` +
- `Work Type: ${job.work_type || 'Not specified'}\n` +
- `Match Score: ${score}%\n\n` +
- `Are you interested? Reply YES to get full recruiter contact details.`
- )
- 
- // Add to recruiter chat
- await appendToChat(
- job.profiles.clerk_user_id,
- `⚡ Claura found a matching candidate!\n\n` +
- `Name: ${candidate.profiles?.full_name || 'Anonymous'}\n` +
- `Role: ${candidate.job_title || 'Not specified'}\n` +
- `Expected: ₹${candidate.salary_min || '0'}-${candidate.salary_max || '0'}/month\n` +
- `Experience: ${candidate.experience_years || '0'} years\n` +
- `Match Score: ${score}%\n\n` +
- `Reply YES to get candidate contact details.`
- )
-
+ // Chat notifications removed
  await sendMatchEmail(
  candidate.profiles.email,
  "⚡ Clauhire: New Job Match - " + job.job_title,
@@ -287,10 +269,13 @@ export async function processNewMatch(
  .from('candidate_profiles')
  .select('*, profiles(id, clerk_user_id, email, full_name)')
  
+ console.log("Candidates found:", candidates?.length);
+ console.log("Jobs found: 1");
+
  for (const candidate of candidates || []) {
  const score = calculateScore(candidate, job)
  console.log(`[TEST MATCH] Candidate: ${candidate.job_title} | Job: ${job.job_title} | Score: ${score}`);
- if (score < 60) continue
+ if (score < 50) continue
  
  const { data: match } = await supabase.from('matches').insert({
  candidate_id: candidate.profile_id,
@@ -321,28 +306,7 @@ export async function processNewMatch(
  })
  notificationsCreated++
  
- await appendToChat(
- candidate.profiles.clerk_user_id,
- `⚡ Claura found a job match for you!\n\n` +
- `Company: ${job.company_name || 'Confidential'}\n` +
- `Role: ${job.job_title || 'Not specified'}\n` +
- `Salary: ₹${job.salary_min || '0'}-${job.salary_max || '0'}/month\n` +
- `Work Type: ${job.work_type || 'Not specified'}\n` +
- `Match Score: ${score}%\n\n` +
- `Are you interested? Reply YES to get full recruiter contact details.`
- )
- 
- await appendToChat(
- job.profiles.clerk_user_id,
- `⚡ Claura found a matching candidate!\n\n` +
- `Name: ${candidate.profiles?.full_name || 'Anonymous'}\n` +
- `Role: ${candidate.job_title || 'Not specified'}\n` +
- `Expected: ₹${candidate.salary_min || '0'}-${candidate.salary_max || '0'}/month\n` +
- `Experience: ${candidate.experience_years || '0'} years\n` +
- `Match Score: ${score}%\n\n` +
- `Reply YES to get candidate contact details.`
- )
-
+ // Chat notifications removed
  await sendMatchEmail(
  candidate.profiles.email,
  "⚡ Clauhire: New Job Match - " + job.job_title,
@@ -700,7 +664,8 @@ export async function POST(req: NextRequest) {
 
  console.log("PROFILE SAVED - running matching...");
  const { matches, notifications } = await processNewMatch(profileId, "CANDIDATE");
- console.log("MATCHES FOUND:", matches.length);
+ console.log("Matching complete:", { matches, notifications });
+ console.log("Matches above threshold:", matches.length);
  console.log("NOTIFICATIONS CREATED:", notifications);
 
  } catch (e) {
@@ -734,7 +699,8 @@ export async function POST(req: NextRequest) {
 
  console.log("JOB SAVED - running matching...");
  const { matches, notifications } = await processNewMatch(profileId, "RECRUITER");
- console.log("MATCHES FOUND:", matches.length);
+ console.log("Matching complete:", { matches, notifications });
+ console.log("Matches above threshold:", matches.length);
  console.log("NOTIFICATIONS CREATED:", notifications);
  } catch (e) {
  console.error("Failed to parse JOB_DATA JSON", e);

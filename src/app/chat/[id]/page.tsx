@@ -299,7 +299,9 @@ export default function ChatPage({ params }: { params: { id: string } }) {
             <div className="font-serif text-[17px] font-bold italic text-[#0F0F0F]">Claura</div>
             <div className="flex items-center gap-1.5 mt-0.5">
               <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-[12px] text-gray-400 font-medium">Your AI Hiring Agent · Online</span>
+              <span className="text-[12px] text-gray-400 font-medium">
+                {role === "CANDIDATE" ? "Your AI Talent Agent · Online" : "Your AI Hiring Agent · Online"}
+              </span>
             </div>
           </div>
         </div>

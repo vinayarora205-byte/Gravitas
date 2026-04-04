@@ -25,6 +25,7 @@ export default function CandidateDashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [candProfile, setCandProfile] = useState<any>(null);
   const [matches, setMatches] = useState<any[]>([]);
+  const [matchesCount, setMatchesCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function CandidateDashboard() {
     const fetchData = async () => {
       if (!user) return;
       const { data: profileData, error } = await supabase
-        .from("profiles").select("*").eq("clerk_user_id", user.id).maybeSingle();
+        .from("profiles").select("id, full_name, hiries_balance, role").eq("clerk_user_id", user.id).maybeSingle();
 
       if (error || !profileData || profileData.role?.toUpperCase() !== "CANDIDATE") {
         router.push("/role-select"); return;
@@ -43,13 +44,26 @@ export default function CandidateDashboard() {
       setProfile(profileData);
 
       const { data: cpData } = await supabase
-        .from("candidate_profiles").select("*").eq("profile_id", profileData.id).maybeSingle();
+        .from("candidate_profiles").select("id, job_title, work_type").eq("profile_id", profileData.id).maybeSingle();
       setCandProfile(cpData);
-
-      const { data: matchesData } = await supabase
-        .from("matches").select("*, job_listings(*)")
-        .eq("candidate_id", profileData.id).order("created_at", { ascending: false });
-      setMatches(matchesData || []);
+      
+      let mCount = 0;
+      let mData: any[] = [];
+      if (cpData) {
+        const { count } = await supabase
+          .from("matches").select("*", { count: "exact", head: true })
+          .eq("candidate_id", profileData.id);
+        mCount = count || 0;
+        
+        const { data: matchesData } = await supabase
+          .from("matches").select("id, score, status, chat_unlocked, job_listings(job_title, company_name, salary_min, salary_max, work_type)")
+          .eq("candidate_id", profileData.id)
+          .order("score", { ascending: false })
+          .limit(5);
+        mData = matchesData || [];
+      }
+      setMatchesCount(mCount);
+      setMatches(mData);
       setLoading(false);
     };
     if (isSignedIn) fetchData();
@@ -66,18 +80,24 @@ export default function CandidateDashboard() {
   const stats = [
     {
       label: "Target Role",
-      value: candProfile?.job_title || "Not Set",
+      value: candProfile?.job_title || "Not set yet",
       Icon: Target,
       sub: "Your goal position",
     },
     {
       label: "Total Matches",
-      value: matches.length,
+      value: matchesCount || 0,
       Icon: Users,
-      sub: `${matches.filter(m => m.score >= 80).length} high-fidelity`,
+      sub: "Across all opportunities",
     },
     {
-      label: "Profile Status",
+      label: "Hiries Balance",
+      value: profile?.hiries_balance || 0,
+      Icon: Briefcase,
+      sub: "Available credits",
+    },
+    {
+      label: "Visibility",
       value: candProfile ? "Active" : "Incomplete",
       Icon: CheckCircle,
       isStatus: true,
@@ -100,7 +120,7 @@ export default function CandidateDashboard() {
           <h1 className="font-serif text-[32px] font-bold italic text-[#0F0F0F]">
             Welcome back, {profile?.full_name?.split(" ")[0] || "Candidate"}
           </h1>
-          <p className="text-[14px] text-gray-400 mt-1">Your career trajectory at a glance.</p>
+          <p className="text-[14px] text-gray-400 mt-1">Manage your matches and opportunities</p>
         </div>
         <button
           onClick={() => router.push("/chat")}
