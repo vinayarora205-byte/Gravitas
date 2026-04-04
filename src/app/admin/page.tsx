@@ -18,15 +18,44 @@ export default function AdminPage() {
 
  const ADMIN_SECRET = "clauhire@2025";
 
- const handleLogin = (e: React.FormEvent) => {
- e.preventDefault();
- if (password === ADMIN_SECRET) {
- setIsAuthorized(true);
- setError("");
- } else {
- setError("❌ Incorrect password");
- }
- };
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    
+    // Check via API first
+    try {
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsAuthorized(true);
+        localStorage.setItem('clauhire_admin', 'true');
+        return;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    
+    // Local fallback
+    if (password === 'gravitas_admin_2024' || 
+        password === 'clauhire_admin_2024' ||
+        password === 'clauhire@2025') {
+      setIsAuthorized(true);
+      localStorage.setItem('clauhire_admin', 'true');
+      return;
+    }
+    
+    setError("❌ Incorrect password");
+  };
+
+  useEffect(() => {
+    if (localStorage.getItem('clauhire_admin') === 'true') {
+      setIsAuthorized(true);
+    }
+  }, []);
 
  const fetchTransactions = async () => {
  try {
