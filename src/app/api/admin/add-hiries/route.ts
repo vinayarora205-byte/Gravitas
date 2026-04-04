@@ -32,34 +32,56 @@ export async function POST(request: Request) {
       }
     )
 
-    // Get all profiles to find by email
+    // Get all profiles to find the best match
     const { data: allProfiles, error: fetchError } = 
       await supabase
         .from('profiles')
-        .select('id, email, full_name, hiries_balance')
+        .select('id, email, full_name, name, hiries_balance')
     
     if (fetchError) {
       return NextResponse.json(
-        { error: fetchError.message },
+        { error: `Database error: ${fetchError.message}` },
         { status: 500 }
       )
     }
 
-    // Find profile by email (case insensitive)
-    const profile = allProfiles?.find(p =>
-      p.email?.toLowerCase().trim() ===
-      email.toLowerCase().trim()
-    )
+    if (!allProfiles || allProfiles.length === 0) {
+      return NextResponse.json(
+        { error: 'No profiles found in database. Check your SUPABASE_SERVICE_ROLE_KEY.' },
+        { status: 404 }
+      )
+    }
+
+    const searchEmail = email.toLowerCase().trim()
+    
+    // 1. Try exact email match
+    let profile = allProfiles.find(p => p.email?.toLowerCase().trim() === searchEmail)
+
+    // 2. Try match by name if email search failed
+    if (!profile) {
+      const searchName = searchEmail.split('@')[0].replace(/[^a-z0-9]/g, '')
+      profile = allProfiles.find(p => {
+        const pName = (p.name || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+        const pFullName = (p.full_name || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+        return pName === searchName || pFullName === searchName
+      })
+    }
 
     if (!profile) {
       return NextResponse.json({
-        error: 'User not found',
-        available_emails: allProfiles?.map(p => p.email)
+        error: 'User not found. Ensure the user has signed up and finished onboarding.',
+        tip: 'If searching by email fails, I also tried matching by name.',
+        count: allProfiles.length,
+        available_emails: allProfiles.slice(0, 15).map(p => p.email || p.name || 'Unknown')
       }, { status: 404 })
     }
 
-    const newBalance = 
-      (profile.hiries_balance || 0) + Number(amount)
+    const amountNum = Number(amount)
+    if (isNaN(amountNum)) {
+      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
+    }
+
+    const newBalance = (profile.hiries_balance || 0) + amountNum
 
     await supabase
       .from('profiles')
@@ -70,16 +92,17 @@ export async function POST(request: Request) {
       .from('hiries_transactions')
       .insert({
         user_id: profile.id,
-        amount: Number(amount),
+        amount: amountNum,
         type: 'ADMIN_CREDIT',
-        description: `Admin added ${amount} Hiries`
+        description: `Admin added ${amountNum} Hiries to ${profile.email || profile.name}`
       })
 
     return NextResponse.json({
       success: true,
-      message: `Added ${amount} Hiries to ${profile.full_name || email}`,
+      message: `Added ${amountNum} Hiries to ${profile.full_name || profile.name || email}`,
       new_balance: newBalance
     })
+
 
   } catch (err: any) {
     return NextResponse.json(
